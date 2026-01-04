@@ -1,15 +1,18 @@
 package com.github.sleepystack.vaulta.entity;
 
 import com.github.sleepystack.vaulta.entity.enumeration.Role;
+import com.github.sleepystack.vaulta.entity.enumeration.Status;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SoftDelete;
 
 import java.util.List;
 
 @Entity
+@SoftDelete
 @Table(name = "users")
 @Getter
 @Setter
@@ -34,4 +37,12 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Account> accounts;
+
+    @Column(nullable = false)
+    private Status status;
+
+    public void addAccount(Account account) {
+        this.accounts.add(account);
+        account.setUser(this);
+    }
 }
