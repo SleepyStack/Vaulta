@@ -1,0 +1,33 @@
+### Maven ###
+target/
+*.log
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+### VS Code (just in case) ###
+.vscode/
+
+### Eclipse (just in case) ###
+.project
+.classpath
+.settings/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Environment / Secrets ###
+.env
+application-local.properties
+application-prod.properties
+
+### Test reports ###
+surefire-reports/
+
+### Optional: Lombok ###
+lombok.config
