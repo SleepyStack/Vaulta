@@ -4,6 +4,7 @@ import com.github.sleepystack.vaulta.dto.UserRegistrationDTO;
 import com.github.sleepystack.vaulta.dto.UserResponseDTO;
 import com.github.sleepystack.vaulta.entity.Account;
 import com.github.sleepystack.vaulta.entity.User;
+import com.github.sleepystack.vaulta.entity.enumeration.Role;
 import com.github.sleepystack.vaulta.entity.enumeration.Status;
 import com.github.sleepystack.vaulta.exception.BusinessLogicException;
 import com.github.sleepystack.vaulta.exception.ExistingCredentialsException;
@@ -11,6 +12,7 @@ import com.github.sleepystack.vaulta.exception.UserNotFoundException;
 import com.github.sleepystack.vaulta.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,28 +24,25 @@ import java.math.BigDecimal;
 public class UserService {
     private final UserRepository userRepository;
     private final AccountService accountService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserResponseDTO registerUser(UserRegistrationDTO user){
-        log.info("Registering new user with username: {}", user.getUsername());
-        if(userRepository.findByUsername(user.getUsername()).isPresent()){
-            log.warn("Registration failed: Username {} already exists", user.getUsername());
-            throw new ExistingCredentialsException("Invalid registration details. Please try again or recover your account.");
-
+    public User registerUser(UserRegistrationDTO user) { // Return the Entity
+        log.info("Registering new user with username: {}", user.username());
+        if(userRepository.findByUsername(user.username()).isPresent()){
+            throw new ExistingCredentialsException("Username already exists");
         }
-        if(userRepository.findByEmail(user.getEmail()).isPresent()){
-            log.warn("Registration failed: Email {} already exists", user.getEmail());
-            throw new ExistingCredentialsException("Invalid registration details. Please try again or recover your account.");
+        if(userRepository.findByEmail(user.email()).isPresent()){
+            throw new ExistingCredentialsException("Email already exists");
         }
-
         User u = new User();
-        u.setUsername(user.getUsername());
-        u.setEmail(user.getEmail());
-        u.setPassword(user.getPassword()); /** hash this **/
+        u.setUsername(user.username());
+        u.setEmail(user.email());
+        u.setPassword(passwordEncoder.encode(user.password()));
         u.setStatus(Status.ACTIVE);
-        User rgUser = userRepository.save(u);
-        log.info("User registered successfully with details: ID: {}, Username: {}, Email : {}", rgUser.getId(), rgUser.getUsername(), rgUser.getEmail());
-        return new UserResponseDTO(rgUser.getId(), rgUser.getUsername(), rgUser.getEmail());
+        u.setRole(Role.USER);
+
+        return userRepository.save(u);
     }
 
     @Transactional

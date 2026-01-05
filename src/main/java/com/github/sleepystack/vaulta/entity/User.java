@@ -3,10 +3,7 @@ package com.github.sleepystack.vaulta.entity;
 import com.github.sleepystack.vaulta.entity.enumeration.Role;
 import com.github.sleepystack.vaulta.entity.enumeration.Status;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.SoftDelete;
 
 import java.util.List;
@@ -14,6 +11,7 @@ import java.util.List;
 @Entity
 @SoftDelete
 @Table(name = "users")
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor

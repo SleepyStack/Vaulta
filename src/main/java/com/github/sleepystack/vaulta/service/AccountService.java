@@ -28,11 +28,11 @@ public class AccountService {
 
     @Transactional
     public AccountResponseDTO openAccount(AccountRequestDTO request) {
-        log.info("Attempting to open a {} account for User ID: {}", request.getAccountType(), request.getUserId());
+        log.info("Attempting to open a {} account for User ID: {}", request.accountType(), request.userId());
 
-        User user = userRepository.findById(request.getUserId())
+        User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> {
-                    log.error("Account creation failed: User ID {} not found", request.getUserId());
+                    log.error("Account creation failed: User ID {} not found", request.userId());
                     return new UserNotFoundException("User Not Found");
                 });
 
@@ -44,8 +44,8 @@ public class AccountService {
 
         Account account = new Account();
         account.setAccountNumber(newAccountNumber);
-        account.setAccountType(request.getAccountType());
-        account.setBalance(request.getInitialDeposit() != null ? request.getInitialDeposit() : BigDecimal.ZERO);
+        account.setAccountType(request.accountType());
+        account.setBalance(request.initialDeposit() != null ? request.initialDeposit() : BigDecimal.ZERO);
         account.setUser(user);
         account.setStatus(Status.ACTIVE);
 
