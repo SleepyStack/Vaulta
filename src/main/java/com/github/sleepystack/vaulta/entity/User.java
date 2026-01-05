@@ -2,6 +2,7 @@ package com.github.sleepystack.vaulta.entity;
 
 import com.github.sleepystack.vaulta.entity.enumeration.Role;
 import com.github.sleepystack.vaulta.entity.enumeration.Status;
+import com.github.sleepystack.vaulta.exception.BusinessLogicException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SoftDelete;
@@ -39,8 +40,15 @@ public class User {
     @Column(nullable = false)
     private Status status;
 
+    private int tokenVersion = 0;
+
     public void addAccount(Account account) {
         this.accounts.add(account);
         account.setUser(this);
+    }
+    public void ensureCanPerformActions() {
+        if (this.status != Status.ACTIVE) {
+            throw new BusinessLogicException("User profile '" + this.username + "' is " + this.status + ". Access denied.");
+        }
     }
 }

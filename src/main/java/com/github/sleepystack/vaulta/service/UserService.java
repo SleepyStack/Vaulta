@@ -45,6 +45,19 @@ public class UserService {
         return userRepository.save(u);
     }
 
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessLogicException("Incorrect current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setTokenVersion(user.getTokenVersion() + 1);
+        userRepository.save(user);
+    }
+
     @Transactional
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
@@ -59,7 +72,7 @@ public class UserService {
         }
 
         user.getAccounts().forEach(account ->
-                accountService.closeAccount(account.getAccountNumber())
+                accountService.closeAccount(account.getAccountNumber(), user.getEmail())
         );
 
         user.setStatus(Status.CLOSED);

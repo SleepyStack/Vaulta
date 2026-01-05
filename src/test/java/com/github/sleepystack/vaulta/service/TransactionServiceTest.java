@@ -2,6 +2,7 @@ package com.github.sleepystack.vaulta.service;
 
 import com.github.sleepystack.vaulta.entity.Account;
 import com.github.sleepystack.vaulta.entity.Transaction;
+import com.github.sleepystack.vaulta.entity.User;
 import com.github.sleepystack.vaulta.exception.InsufficientFundsException;
 import com.github.sleepystack.vaulta.repository.AccountRepository;
 import com.github.sleepystack.vaulta.repository.TransactionRepository;
@@ -17,6 +18,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,12 +35,17 @@ class TransactionServiceTest {
 
     private Account sourceAccount;
     private Account targetAccount;
+    private final String TEST_EMAIL = "test@vaulta.com";
 
     @BeforeEach
     void setUp() {
+        User owner = new User();
+        owner.setEmail(TEST_EMAIL);
+
         sourceAccount = new Account();
         sourceAccount.setAccountNumber("ACC123");
         sourceAccount.setBalance(new BigDecimal("500.00"));
+        sourceAccount.setUser(owner); // Critical: Link the user!
 
         targetAccount = new Account();
         targetAccount.setAccountNumber("ACC456");
@@ -51,38 +58,25 @@ class TransactionServiceTest {
         when(accountRepository.findByAccountNumber("ACC123")).thenReturn(Optional.of(sourceAccount));
         when(accountRepository.findByAccountNumber("ACC456")).thenReturn(Optional.of(targetAccount));
 
-        transactionService.transfer("ACC123", "ACC456", amount);
 
-        assertEquals(new BigDecimal("300.00"), sourceAccount.getBalance()); // 500 - 200
-        assertEquals(new BigDecimal("300.00"), targetAccount.getBalance()); // 100 + 200
+        transactionService.transfer("ACC123", "ACC456", amount, TEST_EMAIL);
+
+        assertEquals(new BigDecimal("300.00"), sourceAccount.getBalance());
+        assertEquals(new BigDecimal("300.00"), targetAccount.getBalance());
 
         verify(transactionRepository, times(3)).save(any(Transaction.class));
     }
 
     @Test
     void transfer_ShouldThrowException_WhenFundsAreInsufficient() {
-        BigDecimal amount = new BigDecimal("1000.00"); // More than the 500 balance
+        BigDecimal amount = new BigDecimal("1000.00");
         when(accountRepository.findByAccountNumber("ACC123")).thenReturn(Optional.of(sourceAccount));
 
         assertThrows(InsufficientFundsException.class,
-                () -> transactionService.transfer("ACC123", "ACC456", amount));
+                () -> transactionService.transfer("ACC123", "ACC456", amount, TEST_EMAIL));
 
         assertEquals(new BigDecimal("500.00"), sourceAccount.getBalance());
         verify(transactionRepository, never()).save(any());
-    }
-
-    @Test
-    void transfer_ShouldSucceed_AndRecordAuditTrail() {
-        BigDecimal amount = new BigDecimal("100.00");
-        when(accountRepository.findByAccountNumber("ACC123")).thenReturn(Optional.of(sourceAccount));
-        when(accountRepository.findByAccountNumber("ACC456")).thenReturn(Optional.of(targetAccount));
-
-        transactionService.transfer("ACC123", "ACC456", amount);
-
-        assertEquals(new BigDecimal("400.00"), sourceAccount.getBalance()); // 500 - 100
-        assertEquals(new BigDecimal("200.00"), targetAccount.getBalance()); // 100 + 100
-
-        verify(transactionRepository, times(3)).save(any(Transaction.class));
     }
 
     @Test
@@ -91,10 +85,23 @@ class TransactionServiceTest {
         when(accountRepository.findByAccountNumber("ACC123")).thenReturn(Optional.of(sourceAccount));
 
         assertThrows(InsufficientFundsException.class, () -> {
-            transactionService.withdraw("ACC123", bigAmount);
+            transactionService.withdraw("ACC123", bigAmount, TEST_EMAIL);
         });
 
         assertEquals(new BigDecimal("500.00"), sourceAccount.getBalance());
+        verify(transactionRepository, never()).save(any());
+    }
+
+    @Test
+    void withdraw_ShouldThrow_WhenUserDoesNotOwnAccount() {
+        String wrongEmail = "hacker@evil.com";
+        BigDecimal amount = new BigDecimal("10.00");
+        when(accountRepository.findByAccountNumber("ACC123")).thenReturn(Optional.of(sourceAccount));
+
+        assertThrows(RuntimeException.class, () -> {
+            transactionService.withdraw("ACC123", amount, wrongEmail);
+        });
+
         verify(transactionRepository, never()).save(any());
     }
 }

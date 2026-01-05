@@ -61,7 +61,7 @@ class UserServiceTest {
 
         userService.deleteUser(userId);
 
-        verify(accountService, times(1)).closeAccount("ACC123");
+        verify(accountService, times(1)).closeAccount("ACC123", user.getEmail());
 
         verify(userRepository).delete(user);
 

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
@@ -27,20 +28,20 @@ public class AccountService {
     private final UserRepository userRepository;
 
     @Transactional
-    public AccountResponseDTO openAccount(AccountRequestDTO request) {
-        log.info("Attempting to open a {} account for User ID: {}", request.accountType(), request.userId());
+    public AccountResponseDTO openAccount(AccountRequestDTO request, String currentUserEmail) {
+        log.info("Opening {} account for user: {}", request.accountType(), currentUserEmail);
 
-        User user = userRepository.findById(request.userId())
-                .orElseThrow(() -> {
-                    log.error("Account creation failed: User ID {} not found", request.userId());
-                    return new UserNotFoundException("User Not Found");
-                });
+        User user = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new UserNotFoundException("Authenticated user not found"));
+        user.ensureCanPerformActions();
+        boolean alreadyHasType = user.getAccounts().stream()
+                .anyMatch(a -> a.getAccountType().equals(request.accountType()));
 
-        String newAccountNumber = "888" + String.format("%07d", ThreadLocalRandom.current().nextInt(10000000));
-
-        while (accountRepository.findByAccountNumber(newAccountNumber).isPresent()) {
-            newAccountNumber = "888" + String.format("%07d", ThreadLocalRandom.current().nextInt(10000000));
+        if (alreadyHasType) {
+            throw new BusinessLogicException("User already has a " + request.accountType() + " account");
         }
+
+        String newAccountNumber = generateUniqueAccountNumber();
 
         Account account = new Account();
         account.setAccountNumber(newAccountNumber);
@@ -50,9 +51,9 @@ public class AccountService {
         account.setStatus(Status.ACTIVE);
 
         user.addAccount(account);
-
         accountRepository.save(account);
-        log.info("Successfully created account {} for user {}", newAccountNumber, user.getUsername());
+
+        log.info("Account {} created for {}", newAccountNumber, user.getUsername());
 
         return new AccountResponseDTO(
                 account.getAccountNumber(),
@@ -62,17 +63,73 @@ public class AccountService {
         );
     }
 
+    private String generateUniqueAccountNumber() {
+        String number;
+        do {
+            number = "888" + String.format("%07d", ThreadLocalRandom.current().nextInt(10000000));
+        } while (accountRepository.findByAccountNumber(number).isPresent());
+        return number;
+    }
+
+    public List<AccountResponseDTO> getMyAccounts(String email) {
+        log.info("Fetching all accounts for user: {}", email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        user.ensureCanPerformActions();
+        return user.getAccounts().stream()
+                .map(acc -> new AccountResponseDTO(
+                        acc.getAccountNumber(),
+                        acc.getAccountType(),
+                        acc.getBalance(),
+                        user.getUsername()
+                )).toList();
+    }
+
+    public AccountResponseDTO getAccountDetails(String accountNumber, String email) {
+        log.info("Fetching details for account: {}", accountNumber);
+        Account acc = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        if (!acc.getUser().getEmail().equals(email)) {
+            throw new BusinessLogicException("Access denied: You do not own this account");
+        }
+
+        return new AccountResponseDTO(
+                acc.getAccountNumber(),
+                acc.getAccountType(),
+                acc.getBalance(),
+                acc.getUser().getUsername()
+        );
+    }
+
     @Transactional
-    public void closeAccount(String accountNumber) {
-        log.info("Attempting to close account by account number : {}", accountNumber);
+    public void closeAccount(String accountNumber, String currentUserEmail) {
         Account acc = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Account Not Found"));
-        if(acc.getBalance().compareTo(BigDecimal.ZERO) != 0) {
-            log.info("Account failed to close : Non-Zero balance");
-            throw new BusinessLogicException("Balance Must Be Zero Before Closing of Account");
+
+        if (!acc.getUser().getEmail().equals(currentUserEmail)) {
+            throw new BusinessLogicException("Access denied: You do not own this account");
         }
+
+        if(acc.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            throw new BusinessLogicException("Balance must be zero before closing");
+        }
+
         acc.setStatus(Status.CLOSED);
         accountRepository.delete(acc);
-        log.info("Successfully closed account by account number : {}", accountNumber);
+        log.info("Account {} closed by {}", accountNumber, currentUserEmail);
+    }
+
+    public List<AccountResponseDTO> getAccountsByUserEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        user.ensureCanPerformActions();
+        return user.getAccounts().stream()
+                .map(acc -> new AccountResponseDTO(
+                        acc.getAccountNumber(),
+                        acc.getAccountType(),
+                        acc.getBalance(),
+                        user.getUsername()
+                )).toList();
     }
 }

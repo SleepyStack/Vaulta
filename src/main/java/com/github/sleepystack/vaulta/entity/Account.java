@@ -2,6 +2,7 @@ package com.github.sleepystack.vaulta.entity;
 
 import com.github.sleepystack.vaulta.entity.enumeration.AccountType;
 import com.github.sleepystack.vaulta.entity.enumeration.Status;
+import com.github.sleepystack.vaulta.exception.BusinessLogicException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -40,4 +41,13 @@ public class Account {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Status status;
+
+    public void ensureActive() {
+        if (this.status != Status.ACTIVE) {
+            throw new BusinessLogicException("Account " + this.accountNumber + " is " + this.status);
+        }
+        if (this.user.getStatus() != Status.ACTIVE) {
+            throw new BusinessLogicException("Owner of account " + this.accountNumber + " is inactive.");
+        }
+    }
 }

@@ -5,10 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public record AccountRequestDTO(
-        @NotNull(message = "User ID is required")
-        Long userId,
-
-        @NotNull(message = "Account type is required") // Changed to @NotNull for Enums
+        @NotNull(message = "Account type is required")
         AccountType accountType,
 
         BigDecimal initialDeposit
