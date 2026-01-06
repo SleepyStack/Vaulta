@@ -10,7 +10,8 @@ import {
   Users, 
   BarChart3, 
   LogOut,
-  Shield
+  Shield,
+  Wallet
 } from 'lucide-react';
 
 interface UserProfile {
@@ -64,6 +65,7 @@ export default function DashboardLayout({
 
   const navLinks = [
     { href: '/dashboard/user', label: 'Overview', icon: LayoutDashboard, adminOnly: false },
+    { href: '/dashboard/accounts', label:  'Accounts', icon:  Wallet, adminOnly: false },
     { href: '/dashboard/transactions', label: 'Transactions', icon: ArrowLeftRight, adminOnly: false },
     { href: '/dashboard/profile', label: 'Profile', icon: User, adminOnly: false },
     { href: '/dashboard/admin', label: 'User Management', icon: Users, adminOnly: true },
