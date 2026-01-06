@@ -1,4 +1,4 @@
-package com.github.sleepystack.vaulta.security.config;
+package com.github.sleepystack.vaulta.config;
 
 import com.github.sleepystack.vaulta.repository.UserRepository;
 import com.github.sleepystack.vaulta.entity.SecureUser;

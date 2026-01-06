@@ -27,7 +27,7 @@ public class DataInitializer implements CommandLineRunner {
             admin.setStatus(Status.ACTIVE);
 
             userRepository.save(admin);
-            System.out.println("✅ Super Admin created: admin@vaulta.com / Admin123!");
+            System.out.println("Super Admin created: admin@vaulta.com / Admin123!");
         }
     }
 }

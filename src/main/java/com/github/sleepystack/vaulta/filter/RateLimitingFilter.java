@@ -1,4 +1,4 @@
-package com.github.sleepystack.vaulta.security.filter;
+package com.github.sleepystack.vaulta.filter;
 
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Bandwidth;

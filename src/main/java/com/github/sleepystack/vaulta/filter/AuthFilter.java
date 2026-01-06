@@ -1,4 +1,4 @@
-package com.github.sleepystack.vaulta.security.filter;
+package com.github.sleepystack.vaulta.filter;
 
 import com.github.sleepystack.vaulta.entity.SecureUser;
 import com.github.sleepystack.vaulta.service.JwtService;
