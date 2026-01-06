@@ -1,33 +1,40 @@
-### Maven ###
-target/
-*.log
-
-### IntelliJ IDEA ###
+# --- IDE & OS ---
 .idea/
-*.iml
-*.ipr
-*.iws
-out/
-
-### VS Code (just in case) ###
 .vscode/
-
-### Eclipse (just in case) ###
-.project
-.classpath
-.settings/
-
-### OS ###
+*.swp
+*.log
 .DS_Store
 Thumbs.db
 
-### Environment / Secrets ###
+# --- Java / Maven (Backend) ---
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/wrapper/maven-wrapper.properties
+# If you use a local H2 database file
+*.mv.db
+*.trace.db
+
+# --- Node / Next.js (Frontend) ---
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.vercel/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# --- Environment & Secrets ---
 .env
-application-local.properties
-application-prod.properties
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-### Test reports ###
-surefire-reports/
-
-### Optional: Lombok ###
-lombok.config
+# --- Agent / Spec files (Optional) ---
+# If you don't want to push your Swagger JSON or AI instructions
+# specs/openapi.json
+# AI_INSTRUCTIONS.md
