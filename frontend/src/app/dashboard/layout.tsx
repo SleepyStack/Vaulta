@@ -11,19 +11,21 @@ import {
   BarChart3, 
   LogOut,
   Shield,
-  Wallet
+  Wallet,
+  CreditCard,
+  UserCog
 } from 'lucide-react';
 
 interface UserProfile {
   email: string;
-  username: string;
+  username:  string;
   role: string;
 }
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React. ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -65,11 +67,14 @@ export default function DashboardLayout({
 
   const navLinks = [
     { href: '/dashboard/user', label: 'Overview', icon: LayoutDashboard, adminOnly: false },
-    { href: '/dashboard/accounts', label:  'Accounts', icon:  Wallet, adminOnly: false },
+    { href: '/dashboard/accounts', label: 'Accounts', icon: Wallet, adminOnly: false },
     { href: '/dashboard/transactions', label: 'Transactions', icon: ArrowLeftRight, adminOnly: false },
-    { href: '/dashboard/profile', label: 'Profile', icon: User, adminOnly: false },
+    { href: '/dashboard/profile', label: 'Profile', icon:  User, adminOnly: false },
     { href: '/dashboard/admin', label: 'User Management', icon: Users, adminOnly: true },
     { href: '/dashboard/admin/stats', label: 'System Stats', icon: BarChart3, adminOnly: true },
+    { href: '/dashboard/admin/accounts', label: 'All Accounts', icon: Wallet, adminOnly: true },
+    { href: '/dashboard/admin/transactions', label: 'All Transactions', icon: CreditCard, adminOnly: true },
+    { href: '/dashboard/admin/users', label: 'All Users', icon: UserCog, adminOnly: true },
   ];
 
   return (
@@ -88,7 +93,7 @@ export default function DashboardLayout({
           {navLinks.map((link) => {
             if (link.adminOnly && !isAdmin) return null;
             
-            const isActive = pathname === link.href;
+            const isActive = pathname === link. href;
             const Icon = link.icon;
 
             return (
@@ -97,8 +102,8 @@ export default function DashboardLayout({
                 href={link.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                   isActive
-                    ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+                    ?  'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                    :  'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
                 }`}
               >
                 <Icon className="w-5 h-5" />

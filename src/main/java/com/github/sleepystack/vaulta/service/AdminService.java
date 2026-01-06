@@ -35,7 +35,7 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
 
     public AdminStatsResponse getSystemStats() {
-        log.info("ADMIN:  Fetching system statistics");
+        log.info("ADMIN: Fetching system statistics");
 
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.countByStatus(Status.ACTIVE);
@@ -75,7 +75,8 @@ public class AdminService {
                             user.getRole(),
                             user.getStatus(),
                             user.getTokenVersion(),
-                            totalBalance
+                            totalBalance,
+                            user.getCreatedAt()
                     );
                 })
                 .toList();
@@ -140,7 +141,9 @@ public class AdminService {
 
     public List<TransactionResponseDTO> getAllTransactions() {
         return transactionRepository.findAll().stream()
+                .sorted((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()))
                 .map(t -> new TransactionResponseDTO(
+                        t.getId(),
                         t.getType().name(),
                         t.getAmount(),
                         t.getFromAccountNumber(),

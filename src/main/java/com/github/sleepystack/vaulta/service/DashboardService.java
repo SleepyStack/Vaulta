@@ -35,7 +35,7 @@ public class DashboardService {
 
         BigDecimal totalBalance = user.getAccounts().stream()
                 .map(Account::getBalance)
-                .reduce(BigDecimal. ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         String primaryAccountNumber = user.getAccounts().stream()
                 .filter(acc -> acc.getAccountType().name().equals("CHECKING"))
@@ -48,15 +48,14 @@ public class DashboardService {
                 .map(Account::getAccountNumber)
                 .toList();
 
-        // FIX: Properly map transactions with correct from/to accounts
-        List<TransactionDTO> recentTransactions = transactionRepository. findAll().stream()
-                .filter(t -> accountNumbers.contains(t. getFromAccountNumber())
+        List<TransactionDTO> recentTransactions = transactionRepository.findAll().stream()
+                .filter(t -> accountNumbers.contains(t.getFromAccountNumber())
                         || accountNumbers.contains(t.getToAccountNumber()))
                 .sorted((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()))
                 .limit(5)
                 .map(t -> new TransactionDTO(
-                        t.getFromAccountNumber(),      // Correct from account
-                        t. getToAccountNumber(),         // Correct to account
+                        t.getFromAccountNumber() != null ? t.getFromAccountNumber() : t.getToAccountNumber(),
+                        t.getToAccountNumber(),
                         t.getAmount()
                 ))
                 .collect(Collectors.toList());

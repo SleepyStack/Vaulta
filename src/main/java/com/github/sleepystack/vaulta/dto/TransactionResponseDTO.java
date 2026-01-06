@@ -1,9 +1,13 @@
 package com.github.sleepystack.vaulta.dto;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 public record TransactionResponseDTO(
+        Long id,
         String type,
-        java.math.BigDecimal amount,
-        String fromAccount,
-        String toAccount,
-        java.time.LocalDateTime timestamp
+        BigDecimal amount,
+        String fromAccountNumber,
+        String toAccountNumber,
+        LocalDateTime timestamp
 ) {}

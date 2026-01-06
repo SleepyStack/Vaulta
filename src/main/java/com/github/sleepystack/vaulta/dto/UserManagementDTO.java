@@ -4,6 +4,7 @@ import com.github.sleepystack.vaulta.entity.enumeration.Role;
 import com.github.sleepystack.vaulta.entity.enumeration.Status;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public record UserManagementDTO(
         Long id,
@@ -12,5 +13,6 @@ public record UserManagementDTO(
         Role role,
         Status status,
         int tokenVersion,
-        BigDecimal totalBalance
+        BigDecimal totalBalance,
+        LocalDateTime createdAt
 ) {}

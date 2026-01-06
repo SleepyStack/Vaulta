@@ -90,6 +90,7 @@ public class TransactionService {
                         || accountNumber.equals(t.getToAccountNumber()))
                 .sorted((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()))
                 .map(t -> new TransactionResponseDTO(
+                        t.getId(),
                         t.getType().name(),
                         t.getAmount(),
                         t.getFromAccountNumber() != null ? t.getFromAccountNumber() : "DEPOSIT",
