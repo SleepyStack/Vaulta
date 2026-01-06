@@ -1,25 +1,49 @@
 import axios from 'axios';
 
+const baseURL = process.env.NEXT_PUBLIC_API_URL;
+
+console.log('🔧 API Configuration:');
+console.log('   Base URL:', baseURL);
+console.log('   Environment:', process.env.NODE_ENV);
+
+if (! baseURL) {
+  console.error('❌ NEXT_PUBLIC_API_URL is not set! ');
+  console.error('   Create frontend/.env.local with: NEXT_PUBLIC_API_URL=http://localhost:8080');
+}
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: baseURL,
   withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
+  console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
+  console.log('   Full URL:', `${config.baseURL}${config.url}`);
+  
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('vaulta_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('   🔑 Token attached');
     }
   }
   return config;
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API Response:', response.status, response.config.url);
+    console.log('   Data:', response.data);
+    return response;
+  },
   (error) => {
+    console.error('❌ API Error:', error.message);
+    console.error('   URL:', error.config?.url);
+    console.error('   Status:', error.response?.status);
+    console.error('   Data:', error. response?.data);
+    
     // 401/403 triggers a security logout based on our SecureUser logic
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (error.response?. status === 401 || error. response?.status === 403) {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('vaulta_token');
         window.location.href = '/login';
