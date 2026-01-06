@@ -44,6 +44,7 @@ export default function TransactionsPage() {
   }, [router]);
 
   const fetchData = async () => {
+    setError(null);
     try {
       const accountsData = await apiClient.get<Account[]>(
         'http://localhost:8080/api/v1/accounts/me'
@@ -53,6 +54,8 @@ export default function TransactionsPage() {
 
       if (accountsData.length > 0) {
         await fetchTransactions(accountsData[0].accountNumber);
+      } else {
+        setTransactions([]);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load data');
@@ -62,6 +65,7 @@ export default function TransactionsPage() {
   };
 
   const fetchTransactions = async (accountNumber: string) => {
+    setError(null);
     try {
       const transactionsData = await apiClient. get<Transaction[]>(
         `http://localhost:8080/api/v1/transactions/${accountNumber}/history`
@@ -69,7 +73,7 @@ export default function TransactionsPage() {
       setTransactions(transactionsData);
       setSelectedAccount(accountNumber);
     } catch (err: any) {
-      setError(err.response?. data?.message || 'Failed to load transactions');
+      setError(err. response?.data?.message || 'Failed to load transactions');
     }
   };
 
@@ -118,14 +122,12 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Error Banner */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
           <p className="text-red-500 text-sm">{error}</p>
         </div>
       )}
 
-      {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-100">Transactions</h1>
@@ -153,23 +155,22 @@ export default function TransactionsPage() {
           </select>
 
           <button
-  onClick={() => {
-    if (selectedAccount && selectedAccount !== 'all') {
-      fetchTransactions(selectedAccount);
-    } else if (accounts.length > 0) {
-      fetchTransactions(accounts[0].accountNumber);
-    }
-  }}
-  disabled={isLoading || accounts.length === 0}
-  className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-all"
->
-  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-  Refresh
-</button>
+            onClick={() => {
+              if (selectedAccount && selectedAccount !== 'all') {
+                fetchTransactions(selectedAccount);
+              } else if (accounts.length > 0) {
+                fetchTransactions(accounts[0].accountNumber);
+              }
+            }}
+            disabled={isLoading || accounts.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-all"
+          >
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
         </div>
       </div>
 
-      {/* STATS */}
       <div className="grid grid-cols-3 gap-6">
         <Stat
           icon={<ArrowDownRight className="w-5 h-5 text-green-500" />}
@@ -186,13 +187,12 @@ export default function TransactionsPage() {
         <Stat
           icon={<DollarSign className="w-5 h-5 text-blue-500" />}
           label="Total Transactions"
-          value={transactions.length}
+          value={transactions. length}
           color="blue"
           isMoney={false}
         />
       </div>
 
-      {/* TABLE */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-800">
           <h3 className="text-lg font-semibold text-slate-100">
@@ -205,7 +205,7 @@ export default function TransactionsPage() {
           </p>
         </div>
 
-        {transactions.length === 0 ? (
+        {transactions.length === 0 ?  (
           <div className="p-8 text-center">
             <Calendar className="mx-auto mb-4 w-8 h-8 text-slate-600" />
             <p className="text-slate-400">No transactions yet</p>

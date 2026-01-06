@@ -19,8 +19,8 @@ interface User {
   username: string;
   email: string;
   role: string;
-  status: string;
-  createdAt: string;
+  status:  string;
+  createdAt:  string;
 }
 
 export default function AdminUsersPage() {
@@ -32,7 +32,6 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   
-  // Modal states
   const [showResetModal, setShowResetModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [tempPassword, setTempPassword] = useState('');
@@ -55,20 +54,21 @@ export default function AdminUsersPage() {
   }, [users, searchTerm]);
 
   const fetchUsers = async () => {
+    setError(null);
     try {
       const data = await apiClient.get<User[]>(
         'http://localhost:8080/api/v1/admin/users'
       );
       setUsers(data);
     } catch (err: any) {
-      setError(err.response?. data?.message || 'Failed to load users');
+      setError(err.response?.data?.message || 'Failed to load users');
     } finally {
       setIsLoading(false);
     }
   };
 
   const filterUsers = () => {
-    if (! searchTerm) {
+    if (!searchTerm) {
       setFilteredUsers(users);
       return;
     }
@@ -83,6 +83,7 @@ export default function AdminUsersPage() {
 
   const handleToggleStatus = async (userId: number) => {
     setActionLoading(userId);
+    setError(null);
     try {
       await apiClient.patch(
         `http://localhost:8080/api/v1/admin/users/${userId}/status`,
@@ -90,16 +91,18 @@ export default function AdminUsersPage() {
       );
       await fetchUsers();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update user status');
+      setError(err.response?.data?. message || 'Failed to update user status');
+      setTimeout(() => setError(null), 3000);
     } finally {
       setActionLoading(null);
     }
   };
 
   const handlePromoteToAdmin = async (userId: number, username: string) => {
-    if (! confirm(`Are you sure you want to promote ${username} to ADMIN?`)) return;
+    if (!confirm(`Are you sure you want to promote ${username} to ADMIN? `)) return;
 
     setActionLoading(userId);
+    setError(null);
     try {
       await apiClient.post(
         `http://localhost:8080/api/v1/admin/users/${userId}/promote`,
@@ -108,7 +111,8 @@ export default function AdminUsersPage() {
       await fetchUsers();
       alert(`${username} has been promoted to ADMIN successfully! `);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to promote user');
+      setError(err.response?.data?.message || 'Failed to promote user');
+      setTimeout(() => setError(null), 3000);
     } finally {
       setActionLoading(null);
     }
@@ -131,15 +135,16 @@ export default function AdminUsersPage() {
     if (!selectedUserId || !tempPassword) return;
 
     setIsSubmitting(true);
+    setError(null);
     try {
       await apiClient.post(
         `http://localhost:8080/api/v1/admin/users/${selectedUserId}/reset-password`,
         { tempPassword }
       );
-      alert('Password reset successfully!');
+      alert('Password reset successfully! ');
       closeResetModal();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to reset password');
+      setError(err.response?.data?.message || 'Failed to reset password');
     } finally {
       setIsSubmitting(false);
     }
@@ -149,7 +154,7 @@ export default function AdminUsersPage() {
     switch (status) {
       case 'ACTIVE':
         return 'bg-green-500/20 text-green-500 border-green-500/30';
-      case 'LOCKED':
+      case 'LOCKED': 
         return 'bg-red-500/20 text-red-500 border-red-500/30';
       case 'FROZEN':
         return 'bg-orange-500/20 text-orange-500 border-orange-500/30';
@@ -158,7 +163,7 @@ export default function AdminUsersPage() {
     }
   };
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleBadgeColor = (role:  string) => {
     return role === 'ADMIN'
       ? 'bg-violet-500/20 text-violet-500 border-violet-500/30'
       : 'bg-blue-500/20 text-blue-500 border-blue-500/30';
@@ -175,30 +180,26 @@ export default function AdminUsersPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+          <p className="text-red-500 text-sm">{error}</p>
+        </div>
+      )}
+
       <div>
         <h1 className="text-3xl font-bold text-slate-100">User Management</h1>
         <p className="text-slate-400 mt-1">Manage users, roles, and permissions</p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-6">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-2">
             <Users className="w-8 h-8 text-blue-500" />
             <p className="text-sm text-slate-400">Total Users</p>
           </div>
-          <p className="text-3xl font-bold text-blue-500">{users.length}</p>
+          <p className="text-3xl font-bold text-blue-500">{users. length}</p>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
@@ -218,7 +219,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
@@ -232,7 +232,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Users Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -294,7 +293,6 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
-                      {/* Toggle Status */}
                       <button
                         onClick={() => handleToggleStatus(user.id)}
                         disabled={actionLoading === user.id}
@@ -304,10 +302,9 @@ export default function AdminUsersPage() {
                             : 'bg-green-500/20 hover:bg-green-500/30 text-green-500'
                         }`}
                       >
-                        {actionLoading === user. id ? '...' : user.status === 'ACTIVE' ? 'Lock' : 'Unlock'}
+                        {actionLoading === user.id ? '.. .' : user.status === 'ACTIVE' ? 'Lock' : 'Unlock'}
                       </button>
 
-                      {/* Promote to Admin (only for non-admins) */}
                       {user.role !== 'ADMIN' && (
                         <button
                           onClick={() => handlePromoteToAdmin(user.id, user.username)}
@@ -319,11 +316,10 @@ export default function AdminUsersPage() {
                         </button>
                       )}
 
-                      {/* Reset Password */}
                       <button
                         onClick={() => openResetModal(user.id)}
                         disabled={actionLoading === user.id}
-                        className="px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-500 rounded-lg text-xs font-medium transition-colors disabled: opacity-50 flex items-center gap-1"
+                        className="px-3 py-1.5 bg-orange-500/20 hover:bg-orange-500/30 text-orange-500 rounded-lg text-xs font-medium transition-colors disabled:opacity-50 flex items-center gap-1"
                       >
                         <Key className="w-3 h-3" />
                         Reset
@@ -344,7 +340,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Reset Password Modal */}
       {showResetModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 w-full max-w-md">
@@ -368,18 +363,12 @@ export default function AdminUsersPage() {
                   value={tempPassword}
                   onChange={(e) => setTempPassword(e. target.value)}
                   placeholder="Enter temporary password"
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus: border-emerald-500"
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
                   required
                   minLength={6}
                 />
                 <p className="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
               </div>
-
-              {error && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                  <p className="text-sm text-red-500">{error}</p>
-                </div>
-              )}
 
               <div className="flex gap-3 pt-2">
                 <button

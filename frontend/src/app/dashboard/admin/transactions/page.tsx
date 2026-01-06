@@ -50,6 +50,7 @@ export default function AdminTransactionsPage() {
   }, [transactions, searchTerm, typeFilter]);
 
   const fetchTransactions = async () => {
+    setError(null);
     try {
       const data = await apiClient.get<Transaction[]>(
         'http://localhost:8080/api/v1/admin/transactions'
@@ -72,7 +73,7 @@ export default function AdminTransactionsPage() {
     if (searchTerm) {
       filtered = filtered.filter(
         (txn) =>
-          txn.fromAccountNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          txn.fromAccountNumber. toLowerCase().includes(searchTerm.toLowerCase()) ||
           txn.toAccountNumber.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -82,13 +83,13 @@ export default function AdminTransactionsPage() {
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
-      case 'DEPOSIT': 
+      case 'DEPOSIT':  
         return <ArrowDownLeft className="w-5 h-5 text-green-500" />;
       case 'WITHDRAWAL':
         return <ArrowUpRight className="w-5 h-5 text-red-500" />;
-      case 'TRANSFER': 
+      case 'TRANSFER':  
         return <RefreshCw className="w-5 h-5 text-blue-500" />;
-      default:
+      default: 
         return <Activity className="w-5 h-5 text-slate-500" />;
     }
   };
@@ -99,9 +100,9 @@ export default function AdminTransactionsPage() {
         return 'text-green-500';
       case 'WITHDRAWAL':
         return 'text-red-500';
-      case 'TRANSFER': 
+      case 'TRANSFER':  
         return 'text-blue-500';
-      default: 
+      default:  
         return 'text-slate-500';
     }
   };
@@ -109,7 +110,6 @@ export default function AdminTransactionsPage() {
   const totalVolume = transactions.reduce((sum, txn) => sum + txn.amount, 0);
   const deposits = transactions.filter((t) => t.type === 'DEPOSIT').length;
   const withdrawals = transactions.filter((t) => t.type === 'WITHDRAWAL').length;
-  const transfers = transactions.filter((t) => t.type === 'TRANSFER').length;
 
   if (isLoading) {
     return (
@@ -129,7 +129,6 @@ export default function AdminTransactionsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-100">All Transactions</h1>
@@ -141,7 +140,6 @@ export default function AdminTransactionsPage() {
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-6">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -178,7 +176,6 @@ export default function AdminTransactionsPage() {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
         <div className="flex gap-4 flex-wrap">
           <div className="flex-1 min-w-[300px]">
@@ -203,7 +200,7 @@ export default function AdminTransactionsPage() {
                   className={`px-4 py-3 rounded-lg font-medium transition-colors ${
                     typeFilter === type
                       ? 'bg-emerald-500 text-white'
-                      :  'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                      :  'bg-slate-800 text-slate-400 hover: bg-slate-700'
                   }`}
                 >
                   {type}
@@ -214,7 +211,6 @@ export default function AdminTransactionsPage() {
         </div>
       </div>
 
-      {/* Transactions Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -242,7 +238,7 @@ export default function AdminTransactionsPage() {
                 <tr key={txn.id} className="hover:bg-slate-800/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      {getTransactionIcon(txn. type)}
+                      {getTransactionIcon(txn.type)}
                       <span className={`font-medium ${getTransactionColor(txn.type)}`}>
                         {txn.type}
                       </span>
@@ -265,7 +261,7 @@ export default function AdminTransactionsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-slate-400">
-                      <p>{new Date(txn.timestamp).toLocaleDateString()}</p>
+                      <p>{new Date(txn. timestamp).toLocaleDateString()}</p>
                       <p className="text-xs text-slate-600">
                         {new Date(txn.timestamp).toLocaleTimeString()}
                       </p>
