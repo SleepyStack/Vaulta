@@ -3,7 +3,7 @@ package com.github.sleepystack.vaulta.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record ResetPassDTO(
+public record ChangePasswordDTO(
         @NotBlank(message = "Old password is required")
         String oldPassword,
 

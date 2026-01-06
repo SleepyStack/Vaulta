@@ -82,29 +82,31 @@ export default function AdminDashboard() {
 };
 
   const toggleUserStatus = async (userId: number) => {
-    const token = localStorage.getItem('vaulta_token');
-    if (!token) return;
+  const token = localStorage.getItem('vaulta_token');
+  if (!token) return;
 
-    setActionLoading(userId);
-    try {
-      await axios.patch(
-        `http://localhost:8080/api/v1/admin/users/${userId}/status`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const usersResponse = await axios.get('http://localhost:8080/api/v1/admin/users', {
+  setActionLoading(userId);
+  try {
+    const response = await axios.patch(
+      `http://localhost:8080/api/v1/admin/users/${userId}/status`,
+      {}, 
+      {
         headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(usersResponse.data);
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to toggle user status');
-    } finally {
-      setActionLoading(null);
-    }
-  };
+      }
+    );
+
+    // Refresh the users list
+    const usersResponse = await axios.get('http://localhost:8080/api/v1/admin/users', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setUsers(usersResponse. data);
+  } catch (err:  any) {
+    console.error('Failed to toggle status:', err);
+    alert(err.response?.data?.message || 'Failed to toggle user status');
+  } finally {
+    setActionLoading(null);
+  }
+};
 
   if (isLoading) {
     return (

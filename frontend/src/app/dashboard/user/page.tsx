@@ -135,7 +135,7 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* Suggested Action Card */}
+      {dashboardData && dashboardData.primaryAccountNumber && (
       <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-xl p-6">
         <div className="flex items-start gap-4">
           <div className="p-3 bg-violet-500/20 rounded-lg">
@@ -144,14 +144,18 @@ export default function UserDashboard() {
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-slate-100 mb-1">Suggested Action</h3>
             <p className="text-slate-400 text-sm mb-3">
-              It&apos;s a great time to review your spending habits! Would you like to transfer to your savings?
+              It&apos;s a great time to review your spending habits!  Would you like to transfer to your savings? 
             </p>
-            <button className="px-4 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-medium transition-all">
-              Start Transfer
+            <button 
+              onClick={() => window.location.href = '/dashboard/accounts'}
+              className="px-4 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-medium transition-all"
+            >
+              Go to Accounts
             </button>
           </div>
         </div>
       </div>
+    )}
 
       {/* Recent Transactions */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">

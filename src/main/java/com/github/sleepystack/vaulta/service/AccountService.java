@@ -71,6 +71,7 @@ public class AccountService {
         return number;
     }
 
+    @Transactional(readOnly = true)
     public List<AccountResponseDTO> getMyAccounts(String email) {
         log.info("Fetching all accounts for user: {}", email);
         User user = userRepository.findByEmail(email)
@@ -85,6 +86,7 @@ public class AccountService {
                 )).toList();
     }
 
+    @Transactional(readOnly = true)
     public AccountResponseDTO getAccountDetails(String accountNumber, String email) {
         log.info("Fetching details for account: {}", accountNumber);
         Account acc = accountRepository.findByAccountNumber(accountNumber)
@@ -120,6 +122,7 @@ public class AccountService {
         log.info("Account {} closed by {}", accountNumber, currentUserEmail);
     }
 
+    @Transactional(readOnly = true)
     public List<AccountResponseDTO> getAccountsByUserEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));

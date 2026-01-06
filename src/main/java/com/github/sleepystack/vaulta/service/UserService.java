@@ -44,7 +44,8 @@ public class UserService {
 
         return userRepository.save(u);
     }
-
+    
+    @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));

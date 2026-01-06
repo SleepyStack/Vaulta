@@ -1,6 +1,6 @@
 package com.github.sleepystack.vaulta.controller;
 
-import com.github.sleepystack.vaulta.dto.ResetPassDTO;
+import com.github.sleepystack.vaulta.dto.ChangePasswordDTO;
 import com.github.sleepystack.vaulta.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ public class UserController {
 
     @PatchMapping("/change-password")
     public ResponseEntity<String> changePassword(
-            @RequestBody ResetPassDTO request, // Use @RequestBody here!
+            @RequestBody ChangePasswordDTO request, // Use @RequestBody here!
             Authentication authentication) {
 
         userService.changePassword(
