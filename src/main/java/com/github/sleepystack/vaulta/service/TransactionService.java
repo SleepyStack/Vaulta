@@ -76,19 +76,26 @@ public class TransactionService {
         transactionRepository.save(t);
     }
 
-    public List<TransactionResponseDTO> getHistory(String accNo, String email) {
-        Account account = accountRepository.findByAccountNumber(accNo)
+    @Transactional(readOnly = true)
+    public List<TransactionResponseDTO> getHistory(String accountNumber, String email) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
         if (!account.getUser().getEmail().equals(email)) {
-            throw new BusinessLogicException("Unauthorized access to this history");
+            throw new BusinessLogicException("Access denied");
         }
-        return transactionRepository.findByAccountNumber(accNo).stream()
+
+        return transactionRepository.findAll().stream()
+                .filter(t -> accountNumber.equals(t.getFromAccountNumber())
+                        || accountNumber.equals(t.getToAccountNumber()))
+                .sorted((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()))
                 .map(t -> new TransactionResponseDTO(
                         t.getType().name(),
                         t.getAmount(),
-                        t.getFromAccountNumber(),
-                        t.getToAccountNumber(),
+                        t.getFromAccountNumber() != null ? t.getFromAccountNumber() : "DEPOSIT",
+                        t.getToAccountNumber() != null ? t.getToAccountNumber() : "WITHDRAWAL",
                         t.getTimestamp()
-                )).toList();
+                ))
+                .toList();
     }
 }

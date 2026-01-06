@@ -35,7 +35,7 @@ public class AdminService {
     private final PasswordEncoder passwordEncoder;
 
     public AdminStatsResponse getSystemStats() {
-        log.info("ADMIN: Fetching system statistics");
+        log.info("ADMIN:  Fetching system statistics");
 
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.countByStatus(Status.ACTIVE);
@@ -43,12 +43,19 @@ public class AdminService {
         BigDecimal totalSystemBalance = userRepository.getTotalSystemBalance();
         long totalTransactionsCount = transactionRepository.count();
 
+        double userActivityRate = totalUsers > 0 ? ((double) activeUsers / totalUsers) * 100 : 0;
+        double avgBalancePerUser = totalUsers > 0 ? totalSystemBalance.doubleValue() / totalUsers : 0;
+        double avgTransactionsPerUser = totalUsers > 0 ? (double) totalTransactionsCount / totalUsers : 0;
+
         return new AdminStatsResponse(
                 totalUsers,
                 activeUsers,
                 lockedUsers,
                 totalSystemBalance,
-                totalTransactionsCount
+                totalTransactionsCount,
+                userActivityRate,
+                avgBalancePerUser,
+                avgTransactionsPerUser
         );
     }
 

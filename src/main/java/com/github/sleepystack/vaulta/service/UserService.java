@@ -44,19 +44,25 @@ public class UserService {
 
         return userRepository.save(u);
     }
-    
+
     @Transactional
-    public void changePassword(String email, String oldPassword, String newPassword) {
+    public void changePassword(String email, String currentPassword, String newPassword, String confirmPassword) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new BusinessLogicException("Incorrect current password.");
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new BusinessLogicException("Current password is incorrect");
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            throw new BusinessLogicException("New passwords do not match");
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
+
+        log.info("Password changed for user: {}", email);
     }
 
     @Transactional

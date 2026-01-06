@@ -7,5 +7,8 @@ public record AdminStatsResponse(
         long activeUsers,
         long lockedUsers,
         BigDecimal totalSystemBalance,
-        long totalTransactionsCount
+        long totalTransactionsCount,
+        double userActivityRate,
+        double avgBalancePerUser,
+        double avgTransactionsPerUser
 ) {}

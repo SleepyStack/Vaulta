@@ -11,7 +11,6 @@ import {
   UserCheck,
   UserX,
   ArrowUpRight,
-  ArrowDownRight,
 } from 'lucide-react';
 
 interface AdminStats {
@@ -20,6 +19,9 @@ interface AdminStats {
   lockedUsers: number;
   totalSystemBalance: number;
   totalTransactionsCount: number;
+  userActivityRate: number;
+  avgBalancePerUser: number;
+  avgTransactionsPerUser: number;
 }
 
 export default function AdminStatsPage() {
@@ -78,8 +80,6 @@ export default function AdminStatsPage() {
     );
   }
 
-  const userActivityRate = stats ?  ((stats.activeUsers / stats.totalUsers) * 100).toFixed(1) : '0';
-
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -119,7 +119,9 @@ export default function AdminStatsPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <UserCheck className="w-8 h-8 text-green-500" />
-            <span className="text-xs text-green-500">{userActivityRate}%</span>
+            <span className="text-xs text-green-500">
+              {stats?.userActivityRate. toFixed(1)}%
+            </span>
           </div>
           <p className="text-sm text-slate-400 mb-1">Active Users</p>
           <p className="text-2xl font-bold text-green-500">{stats?.activeUsers}</p>
@@ -131,7 +133,7 @@ export default function AdminStatsPage() {
           </div>
           <p className="text-sm text-slate-400 mb-1">Total Transactions</p>
           <p className="text-2xl font-bold text-violet-500">
-            {stats?.totalTransactionsCount. toLocaleString()}
+            {stats?.totalTransactionsCount.toLocaleString()}
           </p>
         </div>
       </div>
@@ -166,7 +168,9 @@ export default function AdminStatsPage() {
                   <p className="text-xl font-bold text-slate-100">{stats?.activeUsers}</p>
                 </div>
               </div>
-              <span className="text-xs text-slate-500">{userActivityRate}%</span>
+              <span className="text-xs text-slate-500">
+                {stats?.userActivityRate. toFixed(1)}%
+              </span>
             </div>
 
             <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
@@ -176,11 +180,11 @@ export default function AdminStatsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">Locked/Frozen</p>
-                  <p className="text-xl font-bold text-slate-100">{stats?.lockedUsers}</p>
+                  <p className="text-xl font-bold text-slate-100">{stats?. lockedUsers}</p>
                 </div>
               </div>
               <span className="text-xs text-slate-500">
-                {stats ?  ((stats.lockedUsers / stats. totalUsers) * 100).toFixed(1) : '0'}%
+                {stats ?  ((stats.lockedUsers / stats.totalUsers) * 100).toFixed(1) : '0'}%
               </span>
             </div>
           </div>
@@ -208,7 +212,7 @@ export default function AdminStatsPage() {
                 <TrendingUp className="w-5 h-5 text-blue-500" />
               </div>
               <p className="text-2xl font-bold text-blue-500">
-                ${stats ?  (stats.totalSystemBalance / stats. totalUsers).toLocaleString('en-US', { minimumFractionDigits:  2 }) : '0.00'}
+                ${stats?. avgBalancePerUser.toLocaleString('en-US', { minimumFractionDigits:  2 })}
               </p>
               <p className="text-xs text-slate-500 mt-2">Per registered user</p>
             </div>
@@ -233,13 +237,15 @@ export default function AdminStatsPage() {
         
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center p-4 bg-slate-800/50 rounded-lg">
-            <p className="text-3xl font-bold text-emerald-500 mb-1">{userActivityRate}%</p>
+            <p className="text-3xl font-bold text-emerald-500 mb-1">
+              {stats?.userActivityRate.toFixed(1)}%
+            </p>
             <p className="text-xs text-slate-400">User Activity Rate</p>
           </div>
 
           <div className="text-center p-4 bg-slate-800/50 rounded-lg">
             <p className="text-3xl font-bold text-blue-500 mb-1">
-              {stats ?  (stats.totalTransactionsCount / stats.totalUsers).toFixed(1) : '0'}
+              {stats?.avgTransactionsPerUser.toFixed(1)}
             </p>
             <p className="text-xs text-slate-400">Avg Transactions/User</p>
           </div>

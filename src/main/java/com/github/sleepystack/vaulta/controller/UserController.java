@@ -2,6 +2,7 @@ package com.github.sleepystack.vaulta.controller;
 
 import com.github.sleepystack.vaulta.dto.ChangePasswordDTO;
 import com.github.sleepystack.vaulta.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -14,18 +15,18 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
 
-    @PatchMapping("/change-password")
+    @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(
-            @RequestBody ChangePasswordDTO request, // Use @RequestBody here!
+            @Valid @RequestBody ChangePasswordDTO request,
             Authentication authentication) {
-
+        String email = authentication.getName();
         userService.changePassword(
-                authentication.getName(),
-                request.oldPassword(),
-                request.newPassword()
+                email,
+                request.currentPassword(),
+                request.newPassword(),
+                request.confirmPassword()
         );
-
-        return ResponseEntity.ok("Password updated successfully.");
+        return ResponseEntity.ok("Password changed successfully");
     }
 
     @DeleteMapping("/{id}")

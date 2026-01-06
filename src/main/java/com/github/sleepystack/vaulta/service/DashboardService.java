@@ -33,12 +33,10 @@ public class DashboardService {
 
         user.ensureCanPerformActions();
 
-        // Calculate total balance across all accounts
         BigDecimal totalBalance = user.getAccounts().stream()
                 .map(Account::getBalance)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal. ZERO, BigDecimal::add);
 
-        // Get primary account (first CHECKING account, or first account if no CHECKING)
         String primaryAccountNumber = user.getAccounts().stream()
                 .filter(acc -> acc.getAccountType().name().equals("CHECKING"))
                 .findFirst()
@@ -46,19 +44,19 @@ public class DashboardService {
                 .map(Account::getAccountNumber)
                 .orElse(null);
 
-        // Get recent transactions (last 5 from all accounts)
         List<String> accountNumbers = user.getAccounts().stream()
                 .map(Account::getAccountNumber)
                 .toList();
 
-        List<TransactionDTO> recentTransactions = transactionRepository.findAll().stream()
-                .filter(t -> accountNumbers.contains(t.getFromAccountNumber())
+        // FIX: Properly map transactions with correct from/to accounts
+        List<TransactionDTO> recentTransactions = transactionRepository. findAll().stream()
+                .filter(t -> accountNumbers.contains(t. getFromAccountNumber())
                         || accountNumbers.contains(t.getToAccountNumber()))
                 .sorted((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()))
                 .limit(5)
                 .map(t -> new TransactionDTO(
-                        t.getFromAccountNumber() != null ? t.getFromAccountNumber() : t.getToAccountNumber(),
-                        t.getToAccountNumber(),
+                        t.getFromAccountNumber(),      // Correct from account
+                        t. getToAccountNumber(),         // Correct to account
                         t.getAmount()
                 ))
                 .collect(Collectors.toList());

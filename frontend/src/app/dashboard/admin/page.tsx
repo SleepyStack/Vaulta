@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { apiClient } from '@/lib/apiClient';
 import { 
   DollarSign, 
   Users, 
@@ -16,20 +16,23 @@ import {
 
 interface AdminStats {
   totalUsers: number;
-  activeUsers: number;
-  lockedUsers: number;
-  totalSystemBalance: number;
+  activeUsers:  number;
+  lockedUsers:  number;
+  totalSystemBalance:  number;
   totalTransactionsCount: number;
+  userActivityRate: number;
+  avgBalancePerUser: number;
+  avgTransactionsPerUser: number;
 }
 
 interface UserManagement {
   id: number;
-  username: string;
+  username:  string;
   email: string;
   role: string;
   status: string;
   tokenVersion: number;
-  totalBalance: number;
+  totalBalance:  number;
 }
 
 export default function AdminDashboard() {
@@ -41,8 +44,8 @@ export default function AdminDashboard() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('vaulta_token');
-    const role = localStorage.getItem('vaulta_role');
+    const token = localStorage. getItem('vaulta_token');
+    const role = localStorage. getItem('vaulta_role');
 
     if (!token) {
       router.push('/login');
@@ -54,59 +57,50 @@ export default function AdminDashboard() {
       return;
     }
 
-    fetchAdminData(token);
+    fetchAdminData();
   }, [router]);
 
-  const fetchAdminData = async (token: string) => {
-  setIsLoading(true);
-  setError(null);
-  
-  try {
-    // Fetch stats first
-    const statsResponse = await axios.get('http://localhost:8080/api/v1/admin/stats', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setStats(statsResponse.data);
+  const fetchAdminData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const [statsData, usersData] = await Promise.all([
+        apiClient. get<AdminStats>('http://localhost:8080/api/v1/admin/stats'),
+        apiClient.get<UserManagement[]>('http://localhost:8080/api/v1/admin/users')
+      ]);
 
-    // Then fetch users
-    const usersResponse = await axios.get('http://localhost:8080/api/v1/admin/users', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setUsers(usersResponse.data);
-  } catch (err: any) {
-    console.error('Failed to fetch admin data:', err);
-    setError(err.response?.data?.message || 'Failed to load admin data');
-  } finally {
-    setIsLoading(false);
-  }
-};
+      setStats(statsData);
+      setUsers(usersData);
+    } catch (err: any) {
+      console.error('Failed to fetch admin data:', err);
+      setError(err. response?.data?.message || 'Failed to load admin data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleUserStatus = async (userId: number) => {
-  const token = localStorage.getItem('vaulta_token');
-  if (!token) return;
+    setActionLoading(userId);
+    
+    try {
+      await apiClient.patch(
+        `http://localhost:8080/api/v1/admin/users/${userId}/status`,
+        {}
+      );
 
-  setActionLoading(userId);
-  try {
-    const response = await axios.patch(
-      `http://localhost:8080/api/v1/admin/users/${userId}/status`,
-      {}, 
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    // Refresh the users list
-    const usersResponse = await axios.get('http://localhost:8080/api/v1/admin/users', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setUsers(usersResponse. data);
-  } catch (err:  any) {
-    console.error('Failed to toggle status:', err);
-    alert(err.response?.data?.message || 'Failed to toggle user status');
-  } finally {
-    setActionLoading(null);
-  }
-};
+      // Refresh data
+      await fetchAdminData();
+    } catch (err: any) {
+      console.error('Toggle error:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to toggle user status');
+      
+      // Clear error after 3 seconds
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -121,16 +115,15 @@ export default function AdminDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+          <p className="text-red-500 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Global Stats */}
       <div className="grid grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 rounded-xl p-6 hover:border-emerald-500/40 transition-all">
@@ -166,7 +159,7 @@ export default function AdminDashboard() {
           </div>
           <p className="text-sm text-slate-400 mb-1">Total Transactions</p>
           <p className="text-2xl font-bold text-violet-500">
-            {stats?.totalTransactionsCount.toLocaleString()}
+            {stats?. totalTransactionsCount.toLocaleString()}
           </p>
         </div>
       </div>
@@ -210,10 +203,10 @@ export default function AdminDashboard() {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                      user.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-500' : 'bg-blue-500/20 text-blue-500'
+                      user.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-500' :  'bg-blue-500/20 text-blue-500'
                     }`}>
                       {user.role === 'ADMIN' && <Shield className="w-3 h-3" />}
-                      {user.role}
+                      {user. role}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -232,7 +225,7 @@ export default function AdminDashboard() {
                       disabled={actionLoading === user.id}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                         user.status === 'ACTIVE'
-                          ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/20'
+                          ?  'bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/20'
                           : 'bg-green-500/20 text-green-500 hover:bg-green-500/30 border border-green-500/20'
                       } ${actionLoading === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { apiClient } from '@/lib/apiClient';
 import { 
   Wallet, 
   CreditCard, 
@@ -46,19 +46,17 @@ export default function UserDashboard() {
       return;
     }
 
-    fetchDashboardData(token);
+    fetchDashboardData();
   }, [router]);
 
-  const fetchDashboardData = async (token: string) => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/dashboard/summary', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setDashboardData(response.data);
+      const data = await apiClient.get<DashboardSummary>(
+        'http://localhost:8080/api/v1/dashboard/summary'
+      );
+      setDashboardData(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load dashboard data');
+      setError(err.response?.data?. message || 'Failed to load dashboard data');
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +85,7 @@ export default function UserDashboard() {
 
   const getTransactionType = (transaction: Transaction) => {
     const primaryAccount = dashboardData?.primaryAccountNumber;
-    return transaction.fromAccountNumber === primaryAccount ? 'outgoing' : 'incoming';
+    return transaction.fromAccountNumber === primaryAccount ?  'outgoing' : 'incoming';
   };
 
   return (
@@ -135,27 +133,28 @@ export default function UserDashboard() {
         </div>
       </div>
 
+      {/* Suggested Action Card - Only show if user has accounts */}
       {dashboardData && dashboardData.primaryAccountNumber && (
-      <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-violet-500/20 rounded-lg">
-            <Sparkles className="w-6 h-6 text-violet-400" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-slate-100 mb-1">Suggested Action</h3>
-            <p className="text-slate-400 text-sm mb-3">
-              It&apos;s a great time to review your spending habits!  Would you like to transfer to your savings? 
-            </p>
-            <button 
-              onClick={() => window.location.href = '/dashboard/accounts'}
-              className="px-4 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-medium transition-all"
-            >
-              Go to Accounts
-            </button>
+        <div className="bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-violet-500/20 rounded-lg">
+              <Sparkles className="w-6 h-6 text-violet-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-slate-100 mb-1">Suggested Action</h3>
+              <p className="text-slate-400 text-sm mb-3">
+                It&apos;s a great time to review your spending habits!  Would you like to transfer to your savings? 
+              </p>
+              <button 
+                onClick={() => router.push('/dashboard/accounts')}
+                className="px-4 py-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-sm font-medium transition-all"
+              >
+                Go to Accounts
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
 
       {/* Recent Transactions */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
@@ -218,7 +217,7 @@ export default function UserDashboard() {
                           type === 'incoming' ? 'text-green-500' : 'text-red-500'
                         }`}>
                           {type === 'incoming' ? '+' : '-'}$
-                          {transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {transaction.amount. toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-300 font-mono">
