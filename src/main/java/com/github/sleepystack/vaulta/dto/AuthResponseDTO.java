@@ -4,5 +4,8 @@ import lombok.Builder;
 
 @Builder
 public record AuthResponseDTO(
-        String token
+        String token,
+        String username,
+        String email,
+        String role
 ) {}

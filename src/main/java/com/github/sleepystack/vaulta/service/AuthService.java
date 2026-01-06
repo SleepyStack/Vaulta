@@ -28,7 +28,7 @@ public class AuthService {
         extraClaims.put("v", user.getTokenVersion());
         var jwtToken = jwtService.generateToken(extraClaims, new SecureUser(user));
 
-        return new AuthResponseDTO(jwtToken);
+        return new AuthResponseDTO(jwtToken,user.getUsername(),user.getEmail(),user.getRole().name());
     }
 
     public AuthResponseDTO authenticate(AuthRequestDTO request) {
@@ -42,6 +42,6 @@ public class AuthService {
         extraClaims.put("v", user.getTokenVersion());
         String token = jwtService.generateToken(extraClaims, new SecureUser(user));
 
-        return new AuthResponseDTO(token);
+        return new AuthResponseDTO(token,user.getUsername(),user.getEmail(),user.getRole().name());
     }
 }

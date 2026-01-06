@@ -1,246 +1,146 @@
 'use client';
 
-import { useState, FormEvent, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import axios from 'axios';
 import Link from 'next/link';
-
-interface LoginFormData {
-  email: string;
-  password: string;
-}
-
-interface AuthResponse {
-  token: string;
-}
+import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: '',
+  const [formData, setFormData] = useState({
+    username: '',
     password: '',
   });
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [shouldNavigate, setShouldNavigate] = useState(false);
 
-  // Handle navigation after successful login
-  useEffect(() => {
-    if (shouldNavigate) {
-      router.push('/dashboard');
-    }
-  }, [shouldNavigate, router]);
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    setShouldNavigate(false);
 
     try {
-      console.log('🔵 Attempting login... ', formData. email);
-      
-      const response = await api.post<AuthResponse>('/api/v1/auth/login', {
-        email: formData.email,
-        password: formData. password,
+      const response = await axios.post('http://localhost:8080/api/v1/auth/login', {
+        username: formData.username,
+        password: formData.password,
       });
 
-      console.log('✅ Login successful!');
-
-      // Store JWT token
+      // Store all required data in localStorage
       localStorage.setItem('vaulta_token', response.data.token);
-      
-      setIsLoading(false);
+      localStorage.setItem('vaulta_role', response.data.role);
+      localStorage.setItem('vaulta_email', response.data.email);
+      localStorage.setItem('vaulta_username', response.data.username);
 
-      // Trigger navigation
-      setShouldNavigate(true);
-      
-    } catch (err:  any) {
-      console.error('❌ Login error:', err);
-      
-      // Determine error message
-      let errorMessage = 'An unexpected error occurred. Please try again.';
-      
-      if (err. code === 'ERR_NETWORK') {
-        errorMessage = '🔴 Cannot connect to server. Is the backend running on port 8080?';
-      } else if (err.response) {
-        const status = err.response.status;
-        const serverMessage = err.response.data?.message;
-
-        if (status === 401 || status === 403) {
-          errorMessage = '❌ Invalid email or password.  Please check your credentials and try again. ';
-        } else if (status === 500) {
-          errorMessage = '❌ Server error. Please try again later.';
-        } else if (serverMessage) {
-          errorMessage = `❌ ${serverMessage}`;
-        } else {
-          errorMessage = `❌ Authentication failed (Error ${status}). Please try again.`;
-        }
+      // Redirect based on role
+      if (response.data.role === 'ADMIN') {
+        router.push('/dashboard/admin');
+      } else {
+        router.push('/dashboard/user');
       }
-
-      console.error('📛 Error message:', errorMessage);
-      
-      // Set error and loading state
-      setError(errorMessage);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleChange = (e: React. ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleInputFocus = () => {
-    // Clear error when user focuses on input after an error
-    if (error && ! isLoading) {
-      setError('');
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Brand */}
+        {/* Logo and Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-emerald-500 mb-2">Vaulta</h1>
-          <p className="text-slate-400">Secure Banking Platform</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-500/10 rounded-2xl mb-4">
+            <LogIn className="w-8 h-8 text-emerald-500" />
+          </div>
+          <h1 className="text-3xl font-bold text-slate-100 mb-2">Welcome Back</h1>
+          <p className="text-slate-400">Sign in to access your Vaulta account</p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-slate-900 rounded-2xl shadow-2xl p-8 border border-slate-800">
-          <h2 className="text-2xl font-semibold text-white mb-6">Sign In</h2>
-
-          {/* Error Message - Persistent and Dismissible */}
-          {error && !isLoading && (
-            <div 
-              className="mb-6 p-4 bg-red-500/20 border-2 border-red-500 rounded-lg animate-shake"
-              role="alert"
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-red-400 text-2xl flex-shrink-0 leading-none">⚠️</span>
-                <div className="flex-1 pt-0.5">
-                  <p className="text-red-200 font-semibold text-sm leading-relaxed">
-                    {error}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setError('')}
-                  className="text-red-400 hover:text-red-200 transition flex-shrink-0 text-xl leading-none font-bold"
-                  aria-label="Dismiss error"
-                  type="button"
-                >
-                  ✕
-                </button>
-              </div>
+        {/* Login Form */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-500">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
-            {/* Email Input */}
+          <form onSubmit={handleLogin} className="space-y-6">
+            {/* Username Field */}
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-slate-300 mb-2"
-              >
-                Email Address
+              <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-2">
+                Username
               </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                onFocus={handleInputFocus}
-                required
-                autoComplete="off"
-                className={`w-full px-4 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-slate-500 focus:outline-none focus: ring-2 transition ${
-                  error && !isLoading
-                    ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/50' 
-                    : 'border-slate-700 focus:border-emerald-500 focus:ring-emerald-500/50'
-                }`}
-                placeholder="user@vaulta.com"
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  id="username"
+                  type="text"
+                  required
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                  placeholder="Enter your username"
+                />
+              </div>
             </div>
 
-            {/* Password Input */}
+            {/* Password Field */}
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-slate-300 mb-2"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                onFocus={handleInputFocus}
-                required
-                autoComplete="off"
-                className={`w-full px-4 py-3 bg-slate-800 border-2 rounded-lg text-white placeholder-slate-500 focus: outline-none focus:ring-2 transition ${
-                  error && !isLoading
-                    ?  'border-red-500/50 focus:border-red-500 focus:ring-red-500/50' 
-                    : 'border-slate-700 focus:border-emerald-500 focus:ring-emerald-500/50'
-                }`}
-                placeholder="Enter your password"
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                  placeholder="Enter your password"
+                />
+              </div>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition duration-200 shadow-lg transform hover:scale-[1.02] active:scale-95 disabled:transform-none"
+              className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-                    <circle 
-                      className="opacity-25" 
-                      cx="12" 
-                      cy="12" 
-                      r="10" 
-                      stroke="currentColor" 
-                      strokeWidth="4"
-                    />
-                    <path 
-                      className="opacity-75" 
-                      fill="currentColor" 
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Signing in... 
-                </span>
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </>
               ) : (
-                'Sign In'
+                <>
+                  <LogIn className="w-5 h-5" />
+                  <span>Sign In</span>
+                </>
               )}
             </button>
           </form>
 
           {/* Register Link */}
           <div className="mt-6 text-center">
-            <p className="text-slate-400 text-sm">
-              Don't have an account? {' '}
-              <Link
-                href="/register"
-                className="text-emerald-500 hover:text-emerald-400 font-medium transition underline-offset-2 hover:underline"
-              >
-                Create Account
+            <p className="text-sm text-slate-400">
+              Don&apos;t have an account?{' '}
+              <Link href="/register" className="text-emerald-500 hover:text-emerald-400 font-medium transition">
+                Create one now
               </Link>
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-slate-500 text-xs">
-          <p>Protected by industry-standard encryption</p>
+        <div className="mt-8 text-center">
+          <p className="text-xs text-slate-500">
+            Protected by industry-standard encryption
+          </p>
         </div>
       </div>
     </div>
