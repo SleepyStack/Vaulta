@@ -1,28 +1,56 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 
 class APIClient {
   private requestQueue: Array<() => Promise<any>> = [];
   private isProcessing = false;
-  private readonly DELAY_BETWEEN_REQUESTS = 150; // ms
+  private readonly DELAY_BETWEEN_REQUESTS = 200;
+  private axiosInstance: AxiosInstance;
+
+  constructor() {
+    this.axiosInstance = axios.create({
+      timeout: 30000,
+    });
+
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error:  AxiosError) => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          if (typeof window !== 'undefined') {
+            const currentPath = window.location.pathname;
+            
+            if (currentPath !== '/login' && currentPath !== '/register') {
+              localStorage.removeItem('vaulta_token');
+              localStorage.removeItem('vaulta_role');
+              localStorage.removeItem('vaulta_email');
+              localStorage.removeItem('vaulta_username');
+              window.location.href = '/login';
+            }
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
 
   async request<T>(config: AxiosRequestConfig): Promise<T> {
     return new Promise((resolve, reject) => {
-      this.requestQueue.push(async () => {
+      this.requestQueue. push(async () => {
         try {
           const token = localStorage.getItem('vaulta_token');
           const headers = {
             ... config.headers,
-            .. .(token && { Authorization: `Bearer ${token}` }),
+            ...(token && { Authorization: `Bearer ${token}` }),
+            'Content-Type': 'application/json',
           };
 
-          const response = await axios({ ...config, headers });
+          const response = await this.axiosInstance({ ...config, headers });
           resolve(response.data);
         } catch (error) {
           reject(error);
         }
       });
 
-      if (!this.isProcessing) {
+      if (! this.isProcessing) {
         this.processQueue();
       }
     });
@@ -45,7 +73,7 @@ class APIClient {
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'GET', url });
+    return this.request<T>({ ... config, method: 'GET', url });
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
@@ -56,8 +84,8 @@ class APIClient {
     return this.request<T>({ ...config, method: 'PATCH', url, data });
   }
 
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'DELETE', url });
+  async delete<T>(url: string, config?:  AxiosRequestConfig): Promise<T> {
+    return this. request<T>({ ...config, method: 'DELETE', url });
   }
 }
 

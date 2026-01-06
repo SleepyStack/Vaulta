@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import { apiClient } from '@/lib/apiClient';
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -34,28 +34,25 @@ export default function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  /* ------------------------- AUTH + DATA ------------------------- */
-
   useEffect(() => {
     const token = localStorage.getItem('vaulta_token');
     if (!token) {
       router.push('/login');
       return;
     }
-    fetchData(token);
+    fetchData();
   }, [router]);
 
-  const fetchData = async (token: string) => {
+  const fetchData = async () => {
     try {
-      const accountsResponse = await axios.get(
-        'http://localhost:8080/api/v1/accounts/me',
-        { headers: { Authorization: `Bearer ${token}` } }
+      const accountsData = await apiClient.get<Account[]>(
+        'http://localhost:8080/api/v1/accounts/me'
       );
 
-      setAccounts(accountsResponse.data);
+      setAccounts(accountsData);
 
-      if (accountsResponse.data.length > 0) {
-        await fetchTransactions(token, accountsResponse.data[0].accountNumber);
+      if (accountsData.length > 0) {
+        await fetchTransactions(accountsData[0].accountNumber);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to load data');
@@ -64,30 +61,27 @@ export default function TransactionsPage() {
     }
   };
 
-  const fetchTransactions = async (token: string, accountNumber: string) => {
+  const fetchTransactions = async (accountNumber: string) => {
     try {
-      const response = await axios.get(
-        `http://localhost:8080/api/v1/transactions/${accountNumber}/history`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const transactionsData = await apiClient. get<Transaction[]>(
+        `http://localhost:8080/api/v1/transactions/${accountNumber}/history`
       );
-      setTransactions(response.data);
+      setTransactions(transactionsData);
       setSelectedAccount(accountNumber);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load transactions');
+      setError(err.response?. data?.message || 'Failed to load transactions');
     }
   };
 
-  /* ------------------------- HELPERS ------------------------- */
-
   const isDeposit = (t: Transaction) => t.fromAccountNumber === 'DEPOSIT';
-  const isWithdrawal = (t: Transaction) => t.toAccountNumber === 'WITHDRAWAL';
+  const isWithdrawal = (t:  Transaction) => t.toAccountNumber === 'WITHDRAWAL';
 
   const getTransactionType = (transaction: Transaction) => {
     if (selectedAccount === 'all') {
       const myAccounts = accounts.map(a => a.accountNumber);
       if (
         myAccounts.includes(transaction.fromAccountNumber) &&
-        myAccounts.includes(transaction.toAccountNumber)
+        myAccounts.includes(transaction. toAccountNumber)
       ) {
         return 'internal';
       }
@@ -103,10 +97,8 @@ export default function TransactionsPage() {
   const getDisplayType = (t: Transaction) => {
     if (isDeposit(t)) return 'deposit';
     if (isWithdrawal(t)) return 'withdrawal';
-    return getTransactionType(t); // incoming | outgoing | internal
+    return getTransactionType(t);
   };
-
-  /* ------------------------- STATS ------------------------- */
 
   const totalReceived = transactions
     .filter(t => isDeposit(t) || getTransactionType(t) === 'incoming')
@@ -115,8 +107,6 @@ export default function TransactionsPage() {
   const totalSent = transactions
     .filter(t => isWithdrawal(t) || getTransactionType(t) === 'outgoing')
     .reduce((sum, t) => sum + t.amount, 0);
-
-  /* ------------------------- UI ------------------------- */
 
   if (isLoading) {
     return (
@@ -128,6 +118,13 @@ export default function TransactionsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+          <p className="text-red-500 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
@@ -139,12 +136,10 @@ export default function TransactionsPage() {
           <select
             value={selectedAccount}
             onChange={e => {
-              const token = localStorage.getItem('vaulta_token');
-              if (!token) return;
               if (e.target.value === 'all') {
                 setSelectedAccount('all');
               } else {
-                fetchTransactions(token, e.target.value);
+                fetchTransactions(e.target.value);
               }
             }}
             className="px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-slate-100"
@@ -158,17 +153,19 @@ export default function TransactionsPage() {
           </select>
 
           <button
-            onClick={() => {
-              const token = localStorage.getItem('vaulta_token');
-              if (token && selectedAccount !== 'all') {
-                fetchTransactions(token, selectedAccount);
-              }
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+  onClick={() => {
+    if (selectedAccount && selectedAccount !== 'all') {
+      fetchTransactions(selectedAccount);
+    } else if (accounts.length > 0) {
+      fetchTransactions(accounts[0].accountNumber);
+    }
+  }}
+  disabled={isLoading || accounts.length === 0}
+  className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-all"
+>
+  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+  Refresh
+</button>
         </div>
       </div>
 
@@ -217,45 +214,56 @@ export default function TransactionsPage() {
           <table className="w-full">
             <thead className="bg-slate-800/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs text-slate-400">Type</th>
-                <th className="px-6 py-3 text-left text-xs text-slate-400">Amount</th>
-                <th className="px-6 py-3 text-left text-xs text-slate-400">From</th>
-                <th className="px-6 py-3 text-left text-xs text-slate-400">To</th>
-                <th className="px-6 py-3 text-left text-xs text-slate-400">Date</th>
+                <th className="px-6 py-3 text-left text-xs text-slate-400 uppercase">Type</th>
+                <th className="px-6 py-3 text-left text-xs text-slate-400 uppercase">Amount</th>
+                <th className="px-6 py-3 text-left text-xs text-slate-400 uppercase">From</th>
+                <th className="px-6 py-3 text-left text-xs text-slate-400 uppercase">To</th>
+                <th className="px-6 py-3 text-left text-xs text-slate-400 uppercase">Date</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-800">
-              {transactions.map(t => {
+              {transactions.map((t, idx) => {
                 const displayType = getDisplayType(t);
-                const isCredit =
-                  displayType === 'deposit' || displayType === 'incoming';
+                const isCredit = displayType === 'deposit' || displayType === 'incoming';
 
                 return (
                   <tr
-                    key={`${t.timestamp}-${t.amount}`}
-                    className="hover:bg-slate-800/30"
+                    key={`${t.timestamp}-${t.amount}-${idx}`}
+                    className="hover:bg-slate-800/30 transition-colors"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        {displayType === 'internal' ? (
-                          <ArrowLeftRight className="text-blue-500 w-4 h-4" />
+                        {displayType === 'internal' ?  (
+                          <>
+                            <ArrowLeftRight className="text-blue-500 w-4 h-4" />
+                            <span className="px-2 py-1 bg-blue-500/20 text-blue-500 rounded text-xs font-medium">
+                              Transfer
+                            </span>
+                          </>
                         ) : isCredit ? (
-                          <ArrowDownRight className="text-green-500 w-4 h-4" />
+                          <>
+                            <ArrowDownRight className="text-green-500 w-4 h-4" />
+                            <span className="px-2 py-1 bg-green-500/20 text-green-500 rounded text-xs font-medium capitalize">
+                              {displayType}
+                            </span>
+                          </>
                         ) : (
-                          <ArrowUpRight className="text-red-500 w-4 h-4" />
+                          <>
+                            <ArrowUpRight className="text-red-500 w-4 h-4" />
+                            <span className="px-2 py-1 bg-red-500/20 text-red-500 rounded text-xs font-medium capitalize">
+                              {displayType}
+                            </span>
+                          </>
                         )}
-                        <span className="text-sm capitalize">
-                          {displayType}
-                        </span>
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 font-semibold">
+                    <td className="px-6 py-4">
                       <span
-                        className={
+                        className={`font-semibold ${
                           isCredit ? 'text-green-500' : 'text-red-500'
-                        }
+                        }`}
                       >
                         {isCredit ? '+' : '-'}$
                         {t.amount.toLocaleString('en-US', {
@@ -264,11 +272,11 @@ export default function TransactionsPage() {
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 font-mono text-sm">
+                    <td className="px-6 py-4 font-mono text-sm text-slate-300">
                       {isDeposit(t) ? 'Cash Deposit' : t.fromAccountNumber}
                     </td>
 
-                    <td className="px-6 py-4 font-mono text-sm">
+                    <td className="px-6 py-4 font-mono text-sm text-slate-300">
                       {isWithdrawal(t) ? 'Cash Withdrawal' : t.toAccountNumber}
                     </td>
 
@@ -285,8 +293,6 @@ export default function TransactionsPage() {
     </div>
   );
 }
-
-/* ------------------------- SMALL STAT COMPONENT ------------------------- */
 
 function Stat({
   icon,
@@ -309,7 +315,7 @@ function Stat({
       </div>
       <p className="text-2xl font-bold text-slate-100">
         {isMoney
-          ? `$${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`
+          ? `$${value.toLocaleString('en-US', { minimumFractionDigits:  2 })}`
           : value}
       </p>
     </div>

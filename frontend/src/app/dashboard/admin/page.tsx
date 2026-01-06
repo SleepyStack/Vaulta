@@ -16,9 +16,9 @@ import {
 
 interface AdminStats {
   totalUsers: number;
-  activeUsers:  number;
-  lockedUsers:  number;
-  totalSystemBalance:  number;
+  activeUsers: number;
+  lockedUsers: number;
+  totalSystemBalance: number;
   totalTransactionsCount: number;
   userActivityRate: number;
   avgBalancePerUser: number;
@@ -27,12 +27,12 @@ interface AdminStats {
 
 interface UserManagement {
   id: number;
-  username:  string;
+  username: string;
   email: string;
   role: string;
   status: string;
   tokenVersion: number;
-  totalBalance:  number;
+  totalBalance: number;
 }
 
 export default function AdminDashboard() {
@@ -44,8 +44,8 @@ export default function AdminDashboard() {
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   useEffect(() => {
-    const token = localStorage. getItem('vaulta_token');
-    const role = localStorage. getItem('vaulta_role');
+    const token = localStorage.getItem('vaulta_token');
+    const role = localStorage.getItem('vaulta_role');
 
     if (!token) {
       router.push('/login');
@@ -74,13 +74,29 @@ export default function AdminDashboard() {
       setUsers(usersData);
     } catch (err: any) {
       console.error('Failed to fetch admin data:', err);
-      setError(err. response?.data?.message || 'Failed to load admin data');
+      setError(err.response?.data?.message || 'Failed to load admin data');
     } finally {
       setIsLoading(false);
     }
   };
 
   const toggleUserStatus = async (userId: number) => {
+    const currentUserEmail = localStorage.getItem('vaulta_email');
+    const userToToggle = users.find(u => u.id === userId);
+    
+    // Prevent self-lock
+    if (userToToggle?. email === currentUserEmail) {
+      setError('You cannot lock your own account! ');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    // Confirmation
+    const action = userToToggle?. status === 'ACTIVE' ?  'lock' : 'unlock';
+    if (! confirm(`Are you sure you want to ${action} ${userToToggle?.username}?`)) {
+      return;
+    }
+
     setActionLoading(userId);
     
     try {
@@ -89,13 +105,10 @@ export default function AdminDashboard() {
         {}
       );
 
-      // Refresh data
       await fetchAdminData();
     } catch (err: any) {
       console.error('Toggle error:', err);
       setError(err.response?.data?.message || err.message || 'Failed to toggle user status');
-      
-      // Clear error after 3 seconds
       setTimeout(() => setError(null), 3000);
     } finally {
       setActionLoading(null);
@@ -117,14 +130,12 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Error Banner */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
           <p className="text-red-500 text-sm">{error}</p>
         </div>
       )}
 
-      {/* Global Stats */}
       <div className="grid grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20 rounded-xl p-6 hover:border-emerald-500/40 transition-all">
           <div className="flex items-center justify-between mb-4">
@@ -132,7 +143,7 @@ export default function AdminDashboard() {
           </div>
           <p className="text-sm text-slate-400 mb-1">Platform Liquidity</p>
           <p className="text-2xl font-bold text-emerald-500">
-            ${stats?.totalSystemBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ${stats?.totalSystemBalance. toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
         </div>
 
@@ -159,12 +170,11 @@ export default function AdminDashboard() {
           </div>
           <p className="text-sm text-slate-400 mb-1">Total Transactions</p>
           <p className="text-2xl font-bold text-violet-500">
-            {stats?. totalTransactionsCount.toLocaleString()}
+            {stats?.totalTransactionsCount.toLocaleString()}
           </p>
         </div>
       </div>
 
-      {/* User Management Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-800">
           <h3 className="text-lg font-semibold text-slate-100">User Management</h3>
@@ -175,77 +185,88 @@ export default function AdminDashboard() {
           <table className="w-full">
             <thead className="bg-slate-800/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Balance</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Balance</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="px-6 py-4 text-sm text-slate-400">#{user.id}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-semibold">
-                        {user.username.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-100">{user.username}</p>
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                          <Mail className="w-3 h-3" />
-                          {user.email}
+              {users.map((user) => {
+                const isCurrentUser = user.email === localStorage. getItem('vaulta_email');
+                
+                return (
+                  <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
+                    <td className="px-6 py-4 text-sm text-slate-400">#{user.id}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-semibold">
+                          {user.username. charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-100">{user.username}</p>
+                          <div className="flex items-center gap-1 text-xs text-slate-400">
+                            <Mail className="w-3 h-3" />
+                            {user.email}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                      user.role === 'ADMIN' ? 'bg-purple-500/20 text-purple-500' :  'bg-blue-500/20 text-blue-500'
-                    }`}>
-                      {user.role === 'ADMIN' && <Shield className="w-3 h-3" />}
-                      {user. role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      user.status === 'ACTIVE' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-                    }`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-emerald-500">
-                    ${user.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => toggleUserStatus(user.id)}
-                      disabled={actionLoading === user.id}
-                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                        user.status === 'ACTIVE'
-                          ?  'bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/20'
-                          : 'bg-green-500/20 text-green-500 hover:bg-green-500/30 border border-green-500/20'
-                      } ${actionLoading === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {actionLoading === user.id ? (
-                        <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : user.status === 'ACTIVE' ? (
-                        <>
-                          <ShieldOff className="w-3 h-3" />
-                          Lock User
-                        </>
-                      ) : (
-                        <>
-                          <UserCheck className="w-3 h-3" />
-                          Unlock User
-                        </>
-                      )}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
+                        user.role === 'ADMIN' ?  'bg-purple-500/20 text-purple-500' :  'bg-blue-500/20 text-blue-500'
+                      }`}>
+                        {user.role === 'ADMIN' && <Shield className="w-3 h-3" />}
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        user. status === 'ACTIVE' ?  'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                      }`}>
+                        {user.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm font-semibold text-emerald-500">
+                      ${user.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => toggleUserStatus(user.id)}
+                        disabled={actionLoading === user.id || isCurrentUser}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          isCurrentUser
+                            ? 'bg-slate-700/50 text-slate-500 cursor-not-allowed'
+                            : user.status === 'ACTIVE'
+                            ? 'bg-red-500/20 text-red-500 hover:bg-red-500/30 border border-red-500/20'
+                            : 'bg-green-500/20 text-green-500 hover:bg-green-500/30 border border-green-500/20'
+                        } ${actionLoading === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {actionLoading === user.id ? (
+                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : isCurrentUser ? (
+                          <>
+                            <Shield className="w-3 h-3" />
+                            You
+                          </>
+                        ) : user.status === 'ACTIVE' ? (
+                          <>
+                            <ShieldOff className="w-3 h-3" />
+                            Lock
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="w-3 h-3" />
+                            Unlock
+                          </>
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
