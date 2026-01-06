@@ -30,6 +30,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
     console.log('✅ API Response:', response.status, response.config.url);
@@ -39,14 +40,20 @@ api.interceptors.response.use(
   (error) => {
     console.error('❌ API Error:', error.message);
     console.error('   URL:', error.config?.url);
-    console.error('   Status:', error.response?.status);
+    console.error('   Status:', error. response?.status);
     console.error('   Data:', error. response?.data);
     
     // 401/403 triggers a security logout based on our SecureUser logic
-    if (error.response?. status === 401 || error. response?.status === 403) {
+    // BUT only if we're NOT on the login or register page (those expect 401 for bad credentials)
+    if (error.response?.status === 401 || error.response?.status === 403) {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('vaulta_token');
-        window.location.href = '/login';
+        const currentPath = window.location.pathname;
+        
+        // Don't redirect if we're already on login/register - let the page handle the error
+        if (currentPath !== '/login' && currentPath !== '/register') {
+          localStorage.removeItem('vaulta_token');
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

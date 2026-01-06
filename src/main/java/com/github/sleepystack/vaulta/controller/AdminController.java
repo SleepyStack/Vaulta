@@ -2,8 +2,9 @@ package com.github.sleepystack.vaulta.controller;
 
 import com.github.sleepystack.vaulta.dto.AccountResponseDTO;
 import com.github.sleepystack.vaulta.dto.AdminForcePassResetDTO;
+import com.github.sleepystack.vaulta.dto.AdminStatsResponse;
 import com.github.sleepystack.vaulta.dto.TransactionResponseDTO;
-import com.github.sleepystack.vaulta.dto.UserResponseAdminDTO;
+import com.github.sleepystack.vaulta.dto.UserManagementDTO;
 import com.github.sleepystack.vaulta.entity.enumeration.Status;
 import com.github.sleepystack.vaulta.service.AdminService;
 import lombok.RequiredArgsConstructor;
@@ -21,22 +22,29 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    // --- USER MANAGEMENT ---
-
-    @GetMapping("/users")
-    public ResponseEntity<List<UserResponseAdminDTO>> getAllUsers() {
-        return ResponseEntity.ok(adminService.getAllUsers());
+    @GetMapping("/stats")
+    public ResponseEntity<AdminStatsResponse> getSystemStats() {
+        return ResponseEntity.ok(adminService.getSystemStats());
     }
 
-    @PatchMapping("/users/{userId}/status")
+    @GetMapping("/users")
+    public ResponseEntity<List<UserManagementDTO>> getAllUsersForManagement() {
+        return ResponseEntity.ok(adminService.getAllUsersForManagement());
+    }
+
+    @PatchMapping("/users/{id}/status")
+    public ResponseEntity<String> toggleUserStatus(@PathVariable Long id) {
+        String message = adminService.toggleUserStatus(id);
+        return ResponseEntity.ok(message);
+    }
+
+    @PatchMapping("/users/{userId}/status-update")
     public ResponseEntity<String> updateUserStatus(
             @PathVariable Long userId,
             @RequestParam Status newStatus) {
         adminService.updateUserStatus(userId, newStatus);
         return ResponseEntity.ok("User status updated to " + newStatus);
     }
-
-    // --- ACCOUNT MANAGEMENT ---
 
     @GetMapping("/accounts")
     public ResponseEntity<List<AccountResponseDTO>> getAllAccounts() {
@@ -50,8 +58,6 @@ public class AdminController {
         adminService.updateAccountStatus(accountNumber, newStatus);
         return ResponseEntity.ok("Account " + accountNumber + " status updated to " + newStatus);
     }
-
-    // --- GLOBAL AUDIT ---
 
     @GetMapping("/transactions")
     public ResponseEntity<List<TransactionResponseDTO>> getGlobalTransactionHistory() {
@@ -69,7 +75,7 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> resetPassword(
             @PathVariable Long userId,
-            @RequestBody AdminForcePassResetDTO request) { // Use @RequestBody here!
+            @RequestBody AdminForcePassResetDTO request) {
 
         adminService.resetUserPassword(userId, request.tempPassword());
         return ResponseEntity.ok("Password reset successfully.");

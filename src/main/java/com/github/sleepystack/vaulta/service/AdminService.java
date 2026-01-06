@@ -1,7 +1,9 @@
 package com.github.sleepystack.vaulta.service;
 
 import com.github.sleepystack.vaulta.dto.AccountResponseDTO;
+import com.github.sleepystack.vaulta.dto.AdminStatsResponse;
 import com.github.sleepystack.vaulta.dto.TransactionResponseDTO;
+import com.github.sleepystack.vaulta.dto.UserManagementDTO;
 import com.github.sleepystack.vaulta.dto.UserResponseAdminDTO;
 import com.github.sleepystack.vaulta.entity.Account;
 import com.github.sleepystack.vaulta.entity.User;
@@ -18,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -31,7 +34,65 @@ public class AdminService {
     private final TransactionRepository transactionRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // --- USER ACTIONS ---
+    public AdminStatsResponse getSystemStats() {
+        log.info("ADMIN: Fetching system statistics");
+
+        long totalUsers = userRepository.count();
+        long activeUsers = userRepository.countByStatus(Status.ACTIVE);
+        long lockedUsers = userRepository.countByStatus(Status.FROZEN);
+        BigDecimal totalSystemBalance = userRepository.getTotalSystemBalance();
+        long totalTransactionsCount = transactionRepository.count();
+
+        return new AdminStatsResponse(
+                totalUsers,
+                activeUsers,
+                lockedUsers,
+                totalSystemBalance,
+                totalTransactionsCount
+        );
+    }
+
+    public List<UserManagementDTO> getAllUsersForManagement() {
+        log.info("ADMIN: Fetching all users for management");
+
+        return userRepository.findAll().stream()
+                .map(user -> {
+                    BigDecimal totalBalance = user.getAccounts().stream()
+                            .map(Account::getBalance)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    return new UserManagementDTO(
+                            user.getId(),
+                            user.getUsername(),
+                            user.getEmail(),
+                            user.getRole(),
+                            user.getStatus(),
+                            user.getTokenVersion(),
+                            totalBalance
+                    );
+                })
+                .toList();
+    }
+
+    public String toggleUserStatus(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        Status newStatus;
+        if (user.getStatus() == Status.ACTIVE) {
+            newStatus = Status.FROZEN;
+            log.warn("ADMIN: Locking user {} ({})", user.getUsername(), user.getEmail());
+        } else {
+            newStatus = Status.ACTIVE;
+            log.info("ADMIN: Activating user {} ({})", user.getUsername(), user.getEmail());
+        }
+
+        user.setStatus(newStatus);
+        user.setTokenVersion(user.getTokenVersion() + 1); // Force logout
+        userRepository.save(user);
+
+        return "User " + user.getUsername() + " status changed to " + newStatus;
+    }
 
     public List<UserResponseAdminDTO> getAllUsers() {
         return userRepository.findAll().stream()
@@ -52,8 +113,6 @@ public class AdminService {
         userRepository.save(user);
     }
 
-    // --- ACCOUNT ACTIONS ---
-
     public List<AccountResponseDTO> getAllAccounts() {
         return accountRepository.findAll().stream()
                 .map(acc -> new AccountResponseDTO(
@@ -71,8 +130,6 @@ public class AdminService {
         account.setStatus(newStatus);
         accountRepository.save(account);
     }
-
-    // --- GLOBAL AUDIT ---
 
     public List<TransactionResponseDTO> getAllTransactions() {
         return transactionRepository.findAll().stream()
