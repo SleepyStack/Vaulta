@@ -9,5 +9,4 @@ public class VaultaApplication {
     public static void main(String[] args) {
         SpringApplication.run(VaultaApplication.class, args);
     }
-
 }
