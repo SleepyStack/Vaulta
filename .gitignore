@@ -36,5 +36,5 @@ frontend/yarn-error.log*
 
 # --- Agent / Spec files (Optional) ---
 # If you don't want to push your Swagger JSON or AI instructions
-# specs/openapi.json
-# AI_INSTRUCTIONS.md
+specs/
+AI_INSTRUCTIONS.md
