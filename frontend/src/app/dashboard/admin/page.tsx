@@ -58,24 +58,28 @@ export default function AdminDashboard() {
   }, [router]);
 
   const fetchAdminData = async (token: string) => {
-    try {
-      const [statsResponse, usersResponse] = await Promise.all([
-        axios.get('http://localhost:8080/api/v1/admin/stats', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        axios.get('http://localhost:8080/api/v1/admin/users', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
+  setIsLoading(true);
+  setError(null);
+  
+  try {
+    // Fetch stats first
+    const statsResponse = await axios.get('http://localhost:8080/api/v1/admin/stats', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setStats(statsResponse.data);
 
-      setStats(statsResponse.data);
-      setUsers(usersResponse.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load admin data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Then fetch users
+    const usersResponse = await axios.get('http://localhost:8080/api/v1/admin/users', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setUsers(usersResponse.data);
+  } catch (err: any) {
+    console.error('Failed to fetch admin data:', err);
+    setError(err.response?.data?.message || 'Failed to load admin data');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const toggleUserStatus = async (userId: number) => {
     const token = localStorage.getItem('vaulta_token');

@@ -9,7 +9,7 @@ import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',  // ✅ Changed from 'username' to 'email'
     password: '',
   });
   const [error, setError] = useState('');
@@ -22,8 +22,8 @@ export default function LoginPage() {
 
     try {
       const response = await axios.post('http://localhost:8080/api/v1/auth/login', {
-        username: formData.username,
-        password: formData.password,
+        email: formData.email,  // ✅ Sending email instead of username
+        password:  formData.password,
       });
 
       // Store all required data in localStorage
@@ -33,12 +33,12 @@ export default function LoginPage() {
       localStorage.setItem('vaulta_username', response.data.username);
 
       // Redirect based on role
-      if (response.data.role === 'ADMIN') {
+      if (response. data.role === 'ADMIN') {
         router.push('/dashboard/admin');
       } else {
         router.push('/dashboard/user');
       }
-    } catch (err: any) {
+    } catch (err:  any) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
@@ -67,21 +67,21 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Username Field */}
+            {/* Email Field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-slate-300 mb-2">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                Email Address
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <input
-                  id="username"
-                  type="text"
+                  id="email"
+                  type="email"
                   required
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition"
-                  placeholder="Enter your username"
+                  value={formData. email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target. value })}
+                  className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus: ring-2 focus:ring-emerald-500 focus:border-transparent transition"
+                  placeholder="user@vaulta.com"
                 />
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? (
+              {isLoading ?  (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Signing in...</span>
@@ -128,7 +128,7 @@ export default function LoginPage() {
           {/* Register Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-400">
-              Don&apos;t have an account?{' '}
+              Don&apos;t have an account? {' '}
               <Link href="/register" className="text-emerald-500 hover:text-emerald-400 font-medium transition">
                 Create one now
               </Link>
