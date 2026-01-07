@@ -54,7 +54,7 @@ export default function AccountsPage() {
 
   const fetchAccounts = async (token:  string) => {
     try {
-      const response = await axios.get(API_ENDPOINTS.ACCOUNTS.ME, {
+      const response = await axios.get(API_ENDPOINTS.ACCOUNTS.MY_ACCOUNTS, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAccounts(response.data);

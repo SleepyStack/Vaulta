@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { API_ENDPOINTS } from '@/lib/constants';
 import Link from 'next/link';
+import { API_ENDPOINTS } from '@/lib/constants';
 import { Mail, Lock, LogIn, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
@@ -22,7 +22,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(API_ENDPOINTS.AUTH.LOGIN, {
+        const response = await axios.post(API_ENDPOINTS.AUTH.LOGIN, {
         email: formData.email,  // ✅ Sending email instead of username
         password:  formData.password,
       });

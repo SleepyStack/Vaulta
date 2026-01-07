@@ -8,7 +8,6 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   RefreshCw,
-  Search,
   Download,
   TrendingUp,
   Activity,
@@ -43,7 +42,7 @@ export default function AdminTransactionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>('ALL');
-  const [searchTerm, setSearchTerm] = useState('');
+  // Removed searchTerm state
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(0);
@@ -65,7 +64,7 @@ export default function AdminTransactionsPage() {
 
   useEffect(() => {
     filterTransactions();
-  }, [transactions, typeFilter, searchTerm]);
+  }, [transactions, typeFilter]);
 
   const fetchTransactions = async (page: number) => {
     setIsLoading(true);
@@ -94,19 +93,9 @@ export default function AdminTransactionsPage() {
 
   const filterTransactions = () => {
     let filtered = transactions;
-
     if (typeFilter !== 'ALL') {
       filtered = filtered.filter((txn) => txn.type === typeFilter);
     }
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (txn) =>
-          txn.fromAccountNumber. toLowerCase().includes(searchTerm. toLowerCase()) ||
-          txn.toAccountNumber.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
     setFilteredTransactions(filtered);
   };
 
@@ -213,18 +202,7 @@ export default function AdminTransactionsPage() {
       {/* Filters */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search by account number..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus: ring-2 focus:ring-emerald-500"
-              />
-            </div>
-          </div>
+          {/* Removed search by account number input */}
 
           <div className="flex gap-2">
             {(['ALL', 'DEPOSIT', 'WITHDRAWAL', 'TRANSFER'] as TransactionTypeFilter[]).map(
