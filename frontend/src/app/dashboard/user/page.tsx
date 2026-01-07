@@ -42,10 +42,7 @@ export default function UserDashboard() {
       return;
     }
 
-    if (role === 'ADMIN') {
-      router.push('/dashboard/admin');
-      return;
-    }
+    // Admins can now see their own dashboard, no redirect
 
     fetchDashboardData();
   }, [router]);
