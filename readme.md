@@ -1,41 +1,207 @@
-📖 The "Why" Behind the Design
-I didn't want this to be another generic CRUD app. For Stage 1, I focused on building the "guts" of the bank—making sure the logic was bulletproof before even thinking about the UI. I moved from a NoSQL mindset to a high-integrity PostgreSQL setup because, in a bank, every action needs a real audit trail.
+# Vaulta
 
-🧠 My Thought Process & Architecting
-I took some standard advice and tweaked it to fit my actual needs. Here’s how I handled the big decisions:
+A secure banking platform built with Spring Boot and Next.js, implementing industry-standard authentication, authorization, and transaction management.
 
-1. The "Deep Clean" Exception System
-   I had a specific vision for how the app should talk back when things go wrong. Instead of a generic error handler, I wanted the Service to own the context.
+## Architecture
 
-My custom exceptions (like BusinessLogicException) act as containers—they carry the HTTP Status and Error Code, but I write the actual message in the Service where the error happens.
+**Backend**:  Spring Boot 4.0.1 (Java 21)  
+**Frontend**: Next.js 16.1.1 with React 19  
+**Database**: PostgreSQL  
+**Authentication**: JWT with token versioning
 
-It feels more natural: if a user can't be deleted, the Service knows exactly why, so it should be the one to say it.
+## Tech Stack
 
-I also wrestled with some Jackson databind errors in the IDE, but I forced the imports to behave so the API returns clean, professional JSON instead of a wall of red text.
+### Backend
+- Spring Boot (Web, Data JPA, Security, Validation)
+- PostgreSQL
+- Spring Security with JWT
+- Lombok
+- Maven
+- Testcontainers (Testing)
 
-2. The Account Closing & User Deletion Rules
-   This was the most critical part to get right. Deleting a user in a bank isn't just a simple button click.
+### Frontend
+- Next.js 16 with App Router
+- React 19 with React Compiler
+- TypeScript
+- Tailwind CSS 4
+- Axios
+- Lucide React Icons
 
-The Zero Balance Rule: I enforced a strict guardrail: you can’t delete a user if they have even a cent left in any account. No "lost money" allowed.
+## Prerequisites
 
-Fixing the DRY Issue: I realized that putting account-specific logic inside the UserService was repetitive. I changed it so the UserService calls the AccountService to handle the closing of individual accounts. Now, if the rules for closing an account change, I only fix it in one place.
+- Java 21+
+- Node.js 20+
+- PostgreSQL
+- Maven (or use included wrapper)
 
-Soft Deleting: Instead of wiping rows from the database, I’m flipping a Status to CLOSED and using Hibernate's @SoftDelete. The data stays for the bank's records (auditing), but it's "gone" for the user.
+## Installation
 
-🧪 Testing
-I used JUnit 5 and Mockito to fake the database so I could test the logic in isolation and at high speed.
+### Backend Setup
 
-I wrote two main tests:
+1. Clone the repository: 
+```bash
+git clone https://github.com/SleepyStack/Vaulta.git
+cd Vaulta
+```
 
-One to prove the system successfully blocks a user deletion if they still have money.
+2. Configure database connection in `src/main/resources/application.properties`:
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/vaulta
+spring.datasource. username=your_username
+spring.datasource.password=your_password
+```
+I Suggest Using .env file with a plugin or dependency to use environment variables, rather then hard-coding, one such dependency is already in the pom.xml if required.
 
-One to prove that when a user is deleted, the system correctly force-closes every account they owned.
+3. Build and run:
+```bash
+./mvnw clean install
+./mvnw spring-boot:run
+```
 
-Seeing those green checkmarks gives me a safety net for when I inevitably change something later and need to make sure I didn't break the core bank rules.
+The backend will start on `http://localhost:8080`
 
-🚦 Stage 1 Status: COMPLETE
-The "brain" of the app is working and verified.
+### Frontend Setup
 
-Next Step: Move to Stage 2: The Controller Layer. I’ll be building the actual API endpoints so I can finally hit this with Postman and see those custom error messages and logic flows in action.
-I will also add more complext details in banking logic such as transactions and loans in upcoming stages of development (from the roadmap I made 
-before starting with this project, I will also be adding Spring Security at great depth as security in Banking is like the core feature.)
+1. Navigate to frontend directory:
+```bash
+cd frontend
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create `.env.local`:
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8080
+```
+
+4. Run development server:
+```bash
+npm run dev
+```
+
+The frontend will start on `http://localhost:3000`
+
+## Features
+
+- **User Authentication**: JWT-based authentication with token versioning
+- **Authorization**:  Role-based access control (USER, ADMIN)
+- **Account Management**: User registration, login, profile management
+- **Transaction Processing**:  Deposits, withdrawals, and transfers
+- **Security**: 
+  - Token versioning for forced logout
+  - Rate limiting
+  - Secure password hashing
+  - Request queue management
+- **Modern UI**: Responsive design with Tailwind CSS
+
+## API Structure
+
+### Authentication Endpoints
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/refresh` - Token refresh
+- `POST /api/auth/logout` - User logout
+
+### User Endpoints
+- `GET /api/user/profile` - Get user profile
+- `PATCH /api/user/profile` - Update profile
+
+### Transaction Endpoints
+- `POST /api/transactions/deposit` - Deposit funds
+- `POST /api/transactions/withdraw` - Withdraw funds
+- `POST /api/transactions/transfer` - Transfer funds
+- `GET /api/transactions/history` - Transaction history
+
+## Project Structure
+
+```
+Vaulta/
+├── src/
+│   ├── main/
+│   │   ├── java/com/github/sleepystack/vaulta/
+│   │   │   ├── config/          # Security & app configuration
+│   │   │   ├── controller/      # REST controllers
+│   │   │   ├── entity/          # JPA entities
+│   │   │   ├── repository/      # Data repositories
+│   │   │   ├── service/         # Business logic
+│   │   │   ├── security/        # Security components
+│   │   │   └── dto/             # Data transfer objects
+│   │   └── resources/
+│   │       └── application.properties
+│   └── test/                    # Unit & integration tests
+├── frontend/
+│   ├── src/
+│   │   ├── app/                 # Next.js app router pages
+│   │   ├── components/          # React components
+│   │   ├── lib/                 # API client & utilities
+│   │   └── types/               # TypeScript types
+│   └── public/                  # Static assets
+└── pom.xml
+```
+
+## Testing
+
+### Backend Tests
+```bash
+./mvnw test
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm run lint
+```
+
+## Building for Production
+
+### Backend
+```bash
+./mvnw clean package
+java -jar target/Vaulta-0.0.1-SNAPSHOT. jar
+```
+
+### Frontend
+```bash
+cd frontend
+npm run build
+npm start
+```
+
+## Security Considerations
+
+- JWT tokens stored in localStorage (client-side)
+- Token versioning prevents unauthorized access after logout
+- CORS configured for cross-origin requests
+- Rate limiting on sensitive endpoints
+- Password encryption with BCrypt
+- Request queue to prevent API abuse
+
+## Environment Variables
+
+### Frontend
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:8080` |
+
+## Credits
+
+Built with resources from:
+- **Spring Boot** - Framework foundation
+- **Laur Spilca** - [YouTube Channel](https://www.youtube.com/@laurspilca) - Security architecture guidance
+
+## License
+
+This project is available for educational and commercial use. 
+
+## Author
+
+**SleepyStack**  
+[GitHub Profile](https://github.com/SleepyStack)
+
+---
+
+**Version**: 0.0.1-SNAPSHOT  
+**Last Updated**:  2026-01-06
