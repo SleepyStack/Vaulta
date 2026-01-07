@@ -196,7 +196,7 @@ export default function AccountsPage() {
     if (!token) return;
 
     try {
-      await axios.delete(`${API_ENDPOINTS.ACCOUNTS.ROOT}/${accountNumber}`, {
+      await axios.delete(API_ENDPOINTS.ACCOUNTS.CLOSE(accountNumber), {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchAccounts(token);
