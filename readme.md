@@ -2,7 +2,7 @@
 
 A secure banking platform built with Spring Boot and Next.js, implementing industry-standard authentication, authorization, and transaction management.
 
-> **🚀 Live Demo**: _Coming Soon_ (Deployment in progress)
+> **🚀 Live Demo**: [Vaulta](https://vaulta-five.vercel.app)
 
 ## Architecture
 
@@ -220,7 +220,7 @@ npm start
 
 ## Deployment
 
-**Docker deployment coming soon! ** The application will be containerized and deployed to a cloud platform with the following components: 
+The application will be containerized and deployed to a cloud platform with the following components: 
 - Dockerized Spring Boot backend
 - Dockerized Next.js frontend
 - PostgreSQL database
