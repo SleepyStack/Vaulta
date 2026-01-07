@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { API_ENDPOINTS } from '@/lib/constants';
 import {
   CreditCard,
   TrendingUp,
@@ -49,7 +50,7 @@ export default function AdminAccountsPage() {
     setError(null);
     try {
       const data = await apiClient.get<Account[]>(
-        'http://localhost:8080/api/v1/admin/accounts'
+        API_ENDPOINTS.ADMIN.ACCOUNTS
       );
       setAccounts(data);
     } catch (err: any) {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { API_ENDPOINTS } from '@/lib/constants';
 import { 
   Wallet, 
   CreditCard, 
@@ -52,7 +53,7 @@ export default function UserDashboard() {
   const fetchDashboardData = async () => {
     try {
       const data = await apiClient.get<DashboardSummary>(
-        'http://localhost:8080/api/v1/dashboard/summary'
+        API_ENDPOINTS.DASHBOARD.SUMMARY
       );
       setDashboardData(data);
     } catch (err: any) {

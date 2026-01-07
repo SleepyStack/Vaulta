@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { API_ENDPOINTS } from '@/lib/constants';
 import { 
   DollarSign, 
   Users, 
@@ -66,8 +67,8 @@ export default function AdminDashboard() {
     
     try {
       const [statsData, usersData] = await Promise.all([
-        apiClient. get<AdminStats>('http://localhost:8080/api/v1/admin/stats'),
-        apiClient.get<UserManagement[]>('http://localhost:8080/api/v1/admin/users')
+        apiClient.get<AdminStats>(API_ENDPOINTS.ADMIN.STATS),
+        apiClient.get<UserManagement[]>(API_ENDPOINTS.ADMIN.USERS)
       ]);
 
       setStats(statsData);
@@ -101,7 +102,7 @@ export default function AdminDashboard() {
     
     try {
       await apiClient.patch(
-        `http://localhost:8080/api/v1/admin/users/${userId}/status`,
+        API_ENDPOINTS.ADMIN.TOGGLE_USER_STATUS(userId),
         {}
       );
 

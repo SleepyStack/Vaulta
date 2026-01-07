@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { API_ENDPOINTS } from '@/lib/constants';
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -11,6 +12,8 @@ import {
   Download,
   TrendingUp,
   Activity,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface Transaction {
@@ -22,16 +25,31 @@ interface Transaction {
   timestamp: string;
 }
 
+interface PageInfo {
+  content: Transaction[];
+  totalPages:  number;
+  totalElements: number;
+  number: number;
+  size: number;
+}
+
 type TransactionTypeFilter = 'ALL' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER';
 
 export default function AdminTransactionsPage() {
   const router = useRouter();
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const pageSize = 20;
 
   useEffect(() => {
     const token = localStorage.getItem('vaulta_token');
@@ -42,24 +60,35 @@ export default function AdminTransactionsPage() {
       return;
     }
 
-    fetchTransactions();
+    fetchTransactions(0);
   }, [router]);
 
   useEffect(() => {
     filterTransactions();
-  }, [transactions, searchTerm, typeFilter]);
+  }, [transactions, typeFilter, searchTerm]);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = async (page: number) => {
+    setIsLoading(true);
     setError(null);
     try {
-      const data = await apiClient.get<Transaction[]>(
-        'http://localhost:8080/api/v1/admin/transactions'
+      const response = await apiClient.get<PageInfo>(
+        API_ENDPOINTS.ADMIN.TRANSACTIONS(page, pageSize)
       );
-      setTransactions(data);
-    } catch (err: any) {
+      
+      setTransactions(response.content);
+      setTotalPages(response.totalPages);
+      setTotalElements(response.totalElements);
+      setCurrentPage(response.number);
+    } catch (err:  any) {
       setError(err.response?.data?.message || 'Failed to load transactions');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      fetchTransactions(newPage);
     }
   };
 
@@ -73,7 +102,7 @@ export default function AdminTransactionsPage() {
     if (searchTerm) {
       filtered = filtered.filter(
         (txn) =>
-          txn.fromAccountNumber. toLowerCase().includes(searchTerm.toLowerCase()) ||
+          txn.fromAccountNumber. toLowerCase().includes(searchTerm. toLowerCase()) ||
           txn.toAccountNumber.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -83,26 +112,26 @@ export default function AdminTransactionsPage() {
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
-      case 'DEPOSIT':  
+      case 'DEPOSIT':
         return <ArrowDownLeft className="w-5 h-5 text-green-500" />;
-      case 'WITHDRAWAL':
+      case 'WITHDRAWAL': 
         return <ArrowUpRight className="w-5 h-5 text-red-500" />;
-      case 'TRANSFER':  
+      case 'TRANSFER':
         return <RefreshCw className="w-5 h-5 text-blue-500" />;
-      default: 
+      default:
         return <Activity className="w-5 h-5 text-slate-500" />;
     }
   };
 
   const getTransactionColor = (type: string) => {
     switch (type) {
-      case 'DEPOSIT': 
+      case 'DEPOSIT':
         return 'text-green-500';
       case 'WITHDRAWAL':
         return 'text-red-500';
-      case 'TRANSFER':  
+      case 'TRANSFER': 
         return 'text-blue-500';
-      default:  
+      default: 
         return 'text-slate-500';
     }
   };
@@ -111,7 +140,7 @@ export default function AdminTransactionsPage() {
   const deposits = transactions.filter((t) => t.type === 'DEPOSIT').length;
   const withdrawals = transactions.filter((t) => t.type === 'WITHDRAWAL').length;
 
-  if (isLoading) {
+  if (isLoading && transactions.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
@@ -136,57 +165,63 @@ export default function AdminTransactionsPage() {
         </div>
         <button className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-500 rounded-lg font-medium transition-colors flex items-center gap-2">
           <Download className="w-4 h-4" />
-          Export CSV
+          Export
         </button>
       </div>
 
-      <div className="grid grid-cols-4 gap-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Activity className="w-8 h-8 text-violet-500" />
-            <p className="text-sm text-slate-400">Total Transactions</p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-500">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Total Volume</p>
+              <p className="text-2xl font-bold text-slate-100">
+                ${totalVolume.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-violet-500">{transactions.length}</p>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <ArrowDownLeft className="w-8 h-8 text-green-500" />
-            <p className="text-sm text-slate-400">Deposits</p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-green-500/10 text-green-500">
+              <ArrowDownLeft className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Total Deposits</p>
+              <p className="text-2xl font-bold text-slate-100">{deposits}</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-green-500">{deposits}</p>
         </div>
 
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <ArrowUpRight className="w-8 h-8 text-red-500" />
-            <p className="text-sm text-slate-400">Withdrawals</p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-red-500/10 text-red-500">
+              <ArrowUpRight className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Total Withdrawals</p>
+              <p className="text-2xl font-bold text-slate-100">{withdrawals}</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-red-500">{withdrawals}</p>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="w-8 h-8 text-emerald-500" />
-            <p className="text-sm text-slate-400">Total Volume</p>
-          </div>
-          <p className="text-3xl font-bold text-emerald-500">
-            ${totalVolume.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </p>
         </div>
       </div>
 
+      {/* Filters */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-        <div className="flex gap-4 flex-wrap">
-          <div className="flex-1 min-w-[300px]">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search by account number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus: border-emerald-500"
+                className="w-full pl-10 pr-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus: ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -200,7 +235,7 @@ export default function AdminTransactionsPage() {
                   className={`px-4 py-3 rounded-lg font-medium transition-colors ${
                     typeFilter === type
                       ? 'bg-emerald-500 text-white'
-                      :  'bg-slate-800 text-slate-400 hover: bg-slate-700'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                   }`}
                 >
                   {type}
@@ -211,7 +246,17 @@ export default function AdminTransactionsPage() {
         </div>
       </div>
 
+      {/* Transactions Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-slate-100">Transaction History</h3>
+          {totalElements > 0 && (
+            <span className="text-sm text-slate-400">
+              Showing {currentPage * pageSize + 1} to {Math.min((currentPage + 1) * pageSize, totalElements)} of {totalElements}
+            </span>
+          )}
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-800/50 border-b border-slate-700">
@@ -246,12 +291,12 @@ export default function AdminTransactionsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <span className="font-mono text-sm text-slate-300">
-                      {txn.fromAccountNumber}
+                      {txn. fromAccountNumber}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <span className="font-mono text-sm text-slate-300">
-                      {txn. toAccountNumber}
+                      {txn.toAccountNumber}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -261,7 +306,7 @@ export default function AdminTransactionsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-slate-400">
-                      <p>{new Date(txn. timestamp).toLocaleDateString()}</p>
+                      <p>{new Date(txn.timestamp).toLocaleDateString()}</p>
                       <p className="text-xs text-slate-600">
                         {new Date(txn.timestamp).toLocaleTimeString()}
                       </p>
@@ -279,6 +324,35 @@ export default function AdminTransactionsPage() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-slate-800 flex items-center justify-between">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0 || isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-100 rounded-lg transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-400">
+                Page {currentPage + 1} of {totalPages}
+              </span>
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages - 1 || isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-100 rounded-lg transition-colors"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

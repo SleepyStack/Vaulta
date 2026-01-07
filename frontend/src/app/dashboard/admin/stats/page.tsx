@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { API_ENDPOINTS } from '@/lib/constants';
 import {
   TrendingUp,
   Users,
@@ -49,7 +50,7 @@ export default function AdminStatsPage() {
 
   const fetchStats = async (token: string) => {
     try {
-      const response = await axios.get('http://localhost:8080/api/v1/admin/stats', {
+      const response = await axios.get(API_ENDPOINTS.ADMIN.STATS, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setStats(response.data);

@@ -5,8 +5,10 @@ import com.github.sleepystack.vaulta.dto.AuthResponseDTO;
 import com.github.sleepystack.vaulta.dto.UserRegistrationDTO;
 import com.github.sleepystack.vaulta.entity.SecureUser;
 import com.github.sleepystack.vaulta.entity.User;
+import com.github.sleepystack.vaulta.exception.UserNotFoundException;
 import com.github.sleepystack.vaulta.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
@@ -43,5 +45,13 @@ public class AuthService {
         String token = jwtService.generateToken(extraClaims, new SecureUser(user));
 
         return new AuthResponseDTO(token,user.getUsername(),user.getEmail(),user.getRole().name());
+    }
+
+    public ResponseEntity<String> logout(String email) {
+        User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new UserNotFoundException("Invalid Session"));
+        user.setTokenVersion(user.getTokenVersion() + 1);
+        userRepository.save(user);
+        return ResponseEntity.ok("Logged out successfully");
     }
 }

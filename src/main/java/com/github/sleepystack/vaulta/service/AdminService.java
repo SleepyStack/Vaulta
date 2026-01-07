@@ -6,6 +6,7 @@ import com.github.sleepystack.vaulta.dto.TransactionResponseDTO;
 import com.github.sleepystack.vaulta.dto.UserManagementDTO;
 import com.github.sleepystack.vaulta.dto.UserResponseAdminDTO;
 import com.github.sleepystack.vaulta.entity.Account;
+import com.github.sleepystack.vaulta.entity.Transaction;
 import com.github.sleepystack.vaulta.entity.User;
 import com.github.sleepystack.vaulta.entity.enumeration.Role;
 import com.github.sleepystack.vaulta.entity.enumeration.Status;
@@ -16,6 +17,8 @@ import com.github.sleepystack.vaulta.repository.TransactionRepository;
 import com.github.sleepystack.vaulta.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -139,17 +142,20 @@ public class AdminService {
         accountRepository.save(account);
     }
 
-    public List<TransactionResponseDTO> getAllTransactions() {
-        return transactionRepository.findAll().stream()
-                .sorted((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()))
-                .map(t -> new TransactionResponseDTO(
-                        t.getId(),
-                        t.getType().name(),
-                        t.getAmount(),
-                        t.getFromAccountNumber(),
-                        t.getToAccountNumber(),
-                        t.getTimestamp()
-                )).toList();
+    @Transactional(readOnly = true)
+    public Page<TransactionResponseDTO> getAllTransactions(Pageable pageable) {
+        log.info("ADMIN:  Fetching paginated transaction history");
+
+        Page<Transaction> transactions = transactionRepository.findAll(pageable);
+
+        return transactions.map(t -> new TransactionResponseDTO(
+                t.getId(),
+                t.getType().name(),
+                t.getAmount(),
+                t.getFromAccountNumber(),
+                t.getToAccountNumber(),
+                t.getTimestamp()
+        ));
     }
 
     public void promoteToAdmin(Long userId) {

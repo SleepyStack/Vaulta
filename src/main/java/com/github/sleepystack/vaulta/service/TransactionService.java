@@ -11,6 +11,8 @@ import com.github.sleepystack.vaulta.repository.AccountRepository;
 import com.github.sleepystack.vaulta.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,9 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     @Transactional
     public void deposit(String accountNumber, BigDecimal amount) {
+        if (amount. compareTo(BigDecimal. ZERO) <= 0) {
+            throw new BusinessLogicException("Deposit amount must be positive");
+        }
         Account account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found"));
         account.ensureActive();
@@ -77,26 +82,23 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public List<TransactionResponseDTO> getHistory(String accountNumber, String email) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
+    public Page<TransactionResponseDTO> getHistory(String accountNumber, String email, Pageable pageable) {
+        Account account = accountRepository. findByAccountNumber(accountNumber)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found"));
 
         if (!account.getUser().getEmail().equals(email)) {
             throw new BusinessLogicException("Access denied");
         }
 
-        return transactionRepository.findAll().stream()
-                .filter(t -> accountNumber.equals(t.getFromAccountNumber())
-                        || accountNumber.equals(t.getToAccountNumber()))
-                .sorted((t1, t2) -> t2.getTimestamp().compareTo(t1.getTimestamp()))
-                .map(t -> new TransactionResponseDTO(
-                        t.getId(),
-                        t.getType().name(),
-                        t.getAmount(),
-                        t.getFromAccountNumber() != null ? t.getFromAccountNumber() : "DEPOSIT",
-                        t.getToAccountNumber() != null ? t.getToAccountNumber() : "WITHDRAWAL",
-                        t.getTimestamp()
-                ))
-                .toList();
+        Page<Transaction> transactions = transactionRepository.findByAccountNumber(accountNumber, pageable);
+
+        return transactions.map(t -> new TransactionResponseDTO(
+                t.getId(),
+                t.getType().name(),
+                t.getAmount(),
+                t.getFromAccountNumber() != null ? t.getFromAccountNumber() : "DEPOSIT",
+                t.getToAccountNumber() != null ? t.getToAccountNumber() : "WITHDRAWAL",
+                t.getTimestamp()
+        ));
     }
 }

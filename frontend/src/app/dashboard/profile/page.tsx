@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { API_ENDPOINTS } from '@/lib/constants';
 import {
   User,
   Mail,
@@ -111,7 +112,7 @@ export default function ProfilePage() {
 
     try {
       await axios.post(
-        'http://localhost:8080/api/v1/users/change-password',
+        API_ENDPOINTS.USER.CHANGE_PASSWORD,
         {
           currentPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword,

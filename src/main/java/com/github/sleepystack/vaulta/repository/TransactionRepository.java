@@ -1,6 +1,8 @@
 package com.github.sleepystack.vaulta.repository;
 
 import com.github.sleepystack.vaulta.entity.Transaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +18,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             String toAccountNumber
     );
 
-    @Query("SELECT t FROM Transaction t WHERE t.fromAccountNumber = :acc OR t.toAccountNumber = :acc ORDER BY t.timestamp DESC")
-    List<Transaction> findByAccountNumber(@Param("acc") String acc);
+    @Query("SELECT t FROM Transaction t WHERE t.fromAccountNumber = :acc OR t.toAccountNumber = : acc ORDER BY t.timestamp DESC")
+    Page<Transaction> findByAccountNumber(@Param("acc") String accountNumber, Pageable pageable);
 }

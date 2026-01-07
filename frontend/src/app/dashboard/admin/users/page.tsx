@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { API_ENDPOINTS } from '@/lib/constants';
 import {
   Users,
   Shield,
@@ -57,7 +58,7 @@ export default function AdminUsersPage() {
     setError(null);
     try {
       const data = await apiClient.get<User[]>(
-        'http://localhost:8080/api/v1/admin/users'
+        API_ENDPOINTS.ADMIN.USERS
       );
       setUsers(data);
     } catch (err: any) {
@@ -86,7 +87,7 @@ export default function AdminUsersPage() {
     setError(null);
     try {
       await apiClient.patch(
-        `http://localhost:8080/api/v1/admin/users/${userId}/status`,
+        API_ENDPOINTS.ADMIN.TOGGLE_USER_STATUS(userId),
         {}
       );
       await fetchUsers();
@@ -105,7 +106,7 @@ export default function AdminUsersPage() {
     setError(null);
     try {
       await apiClient.post(
-        `http://localhost:8080/api/v1/admin/users/${userId}/promote`,
+        API_ENDPOINTS.ADMIN.PROMOTE_USER(userId),
         {}
       );
       await fetchUsers();
@@ -138,7 +139,7 @@ export default function AdminUsersPage() {
     setError(null);
     try {
       await apiClient.post(
-        `http://localhost:8080/api/v1/admin/users/${selectedUserId}/reset-password`,
+        API_ENDPOINTS.ADMIN.RESET_PASSWORD(selectedUserId!),
         { tempPassword }
       );
       alert('Password reset successfully! ');

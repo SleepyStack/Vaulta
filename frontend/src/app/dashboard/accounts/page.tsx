@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { API_ENDPOINTS } from '@/lib/constants';
 import { 
   Wallet, 
   Plus,
@@ -53,7 +54,7 @@ export default function AccountsPage() {
 
   const fetchAccounts = async (token:  string) => {
     try {
-      const response = await axios. get('http://localhost:8080/api/v1/accounts/me', {
+      const response = await axios.get(API_ENDPOINTS.ACCOUNTS.ME, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setAccounts(response.data);
@@ -74,7 +75,7 @@ export default function AccountsPage() {
 
     try {
       await axios.post(
-        'http://localhost:8080/api/v1/accounts/open',
+        API_ENDPOINTS.ACCOUNTS.OPEN,
         {
           accountType: createForm.accountType,
           initialDeposit: createForm.initialDeposit ?  parseFloat(createForm.initialDeposit) : 0,
@@ -101,7 +102,7 @@ export default function AccountsPage() {
 
     try {
       await axios.post(
-        'http://localhost:8080/api/v1/transactions/deposit',
+        API_ENDPOINTS.TRANSACTIONS.DEPOSIT,
         {
           accountNumber: selectedAccount,
           amount: parseFloat(transactionForm. amount),
@@ -128,7 +129,7 @@ export default function AccountsPage() {
 
     try {
       await axios.post(
-        'http://localhost:8080/api/v1/transactions/withdraw',
+        API_ENDPOINTS.TRANSACTIONS.WITHDRAW,
         {
           accountNumber: selectedAccount,
           amount: parseFloat(transactionForm.amount),
@@ -155,7 +156,7 @@ export default function AccountsPage() {
 
     try {
       await axios.post(
-        'http://localhost:8080/api/v1/transactions/transfer',
+        API_ENDPOINTS.TRANSACTIONS.TRANSFER,
         {
           accountNumber:  selectedAccount,
           targetAccountNumber: transactionForm.targetAccount,
@@ -195,7 +196,7 @@ export default function AccountsPage() {
     if (!token) return;
 
     try {
-      await axios.delete(`http://localhost:8080/api/v1/accounts/${accountNumber}`, {
+      await axios.delete(`${API_ENDPOINTS.ACCOUNTS.ROOT}/${accountNumber}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchAccounts(token);

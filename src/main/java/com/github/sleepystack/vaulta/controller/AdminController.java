@@ -1,13 +1,17 @@
 package com.github.sleepystack.vaulta.controller;
 
-import com.github.sleepystack.vaulta.dto.AccountResponseDTO;
-import com.github.sleepystack.vaulta.dto.AdminForcePassResetDTO;
+import com.github.sleepystack.vaulta. dto.AccountResponseDTO;
+import com.github. sleepystack.vaulta.dto.AdminForcePassResetDTO;
 import com.github.sleepystack.vaulta.dto.AdminStatsResponse;
-import com.github.sleepystack.vaulta.dto.TransactionResponseDTO;
+import com.github.sleepystack.vaulta. dto.TransactionResponseDTO;
 import com.github.sleepystack.vaulta.dto.UserManagementDTO;
-import com.github.sleepystack.vaulta.entity.enumeration.Status;
-import com.github.sleepystack.vaulta.service.AdminService;
+import com. github.sleepystack.vaulta.entity.enumeration.Status;
+import com.github.sleepystack.vaulta. service.AdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain. Pageable;
+import org. springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +39,7 @@ public class AdminController {
     @PatchMapping("/users/{id}/status")
     public ResponseEntity<String> toggleUserStatus(@PathVariable Long id) {
         String message = adminService.toggleUserStatus(id);
-        return ResponseEntity.ok(message);
+        return ResponseEntity. ok(message);
     }
 
     @PatchMapping("/users/{userId}/status-update")
@@ -60,8 +64,12 @@ public class AdminController {
     }
 
     @GetMapping("/transactions")
-    public ResponseEntity<List<TransactionResponseDTO>> getGlobalTransactionHistory() {
-        return ResponseEntity.ok(adminService.getAllTransactions());
+    public ResponseEntity<Page<TransactionResponseDTO>> getGlobalTransactionHistory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
+        return ResponseEntity.ok(adminService. getAllTransactions(pageable));
     }
 
     @PostMapping("/users/{userId}/promote")
@@ -78,6 +86,6 @@ public class AdminController {
             @RequestBody AdminForcePassResetDTO request) {
 
         adminService.resetUserPassword(userId, request.tempPassword());
-        return ResponseEntity.ok("Password reset successfully.");
+        return ResponseEntity. ok("Password reset successfully.");
     }
 }

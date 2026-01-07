@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { API_ENDPOINTS } from '@/lib/constants';
 import Link from 'next/link';
 import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
 
@@ -36,7 +37,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/auth/register', {
+      const response = await axios.post(API_ENDPOINTS.AUTH.REGISTER, {
         username: formData.username,
         email: formData.email,
         password: formData.password,
