@@ -6,6 +6,9 @@ A secure banking platform built with Spring Boot and Next.js, implementing indus
 
 ## Architecture
 
+➡️ **[View full Architecture & Flow Analysis](assets/architecture_analysis.md)**  
+(All diagrams are included in this document)
+
 **Backend**:  Spring Boot 4.0.1 (Java 21)  
 **Frontend**: Next.js 16.1.1 with React 19  
 **Database**: PostgreSQL  
@@ -33,12 +36,40 @@ A secure banking platform built with Spring Boot and Next.js, implementing indus
 - Axios
 - Lucide React Icons
 
+## Features
+
+- **User Authentication**: JWT-based authentication with token versioning
+- **Authorization**: Role-based access control (USER, ADMIN)
+- **Account Management**: User registration, login, profile management
+- **Transaction Processing**: Deposits, withdrawals, and transfers
+- **Database Migrations**: Automated schema versioning with Flyway
+- **API Documentation**: Interactive API docs via OpenAPI/Swagger
+- **Health Monitoring**: Spring Boot Actuator endpoints
+- **Security**: 
+  - Token versioning for forced logout
+  - Rate limiting with Bucket4j
+  - Secure password hashing with BCrypt
+  - Request queue management
+  - CORS configuration
+- **Modern UI**: Responsive design with Tailwind CSS
+
 ## Prerequisites
 
 - Java 21+
 - Node.js 20+
 - PostgreSQL
 - Maven (or use included wrapper)
+
+## Application Screenshots
+
+### Authentication
+![Login Page](assets/screenshots/LoginPage.png)
+
+### Dashboard
+![Admin Dashboard](assets/screenshots/AdminView3.png)
+
+**[View More](assets/screenshots)**
+
 
 ## Installation
 
@@ -97,23 +128,6 @@ npm run dev
 ```
 
 The frontend will start on `http://localhost:3000`
-
-## Features
-
-- **User Authentication**: JWT-based authentication with token versioning
-- **Authorization**: Role-based access control (USER, ADMIN)
-- **Account Management**: User registration, login, profile management
-- **Transaction Processing**: Deposits, withdrawals, and transfers
-- **Database Migrations**: Automated schema versioning with Flyway
-- **API Documentation**: Interactive API docs via OpenAPI/Swagger
-- **Health Monitoring**: Spring Boot Actuator endpoints
-- **Security**: 
-  - Token versioning for forced logout
-  - Rate limiting with Bucket4j
-  - Secure password hashing with BCrypt
-  - Request queue management
-  - CORS configuration
-- **Modern UI**: Responsive design with Tailwind CSS
 
 ## Database Migration Management
 
@@ -237,6 +251,16 @@ The application will be containerized and deployed to a cloud platform with the 
 - Database migrations managed securely through Flyway
 - Soft delete implementation for data retention
 
+## Known Limitations & Future Improvements
+
+- Deployed as a single-node application; no horizontal scaling or multi-instance coordination
+- Transaction safety is enforced using database-level ACID guarantees and `@Transactional` boundaries; no cross-node concurrency handling required in the current architecture
+- Rate limiting implemented using Bucket4j with request queueing to handle controlled bursts; not adaptive to dynamic traffic patterns
+- JWT tokens are stored in `localStorage` for simplicity in the demo; HttpOnly cookies would be preferred for higher-security production environments
+- Centralized logging implemented using SLF4J with Logback; no distributed tracing or log aggregation
+- No dedicated audit logging, alerting, or fraud detection subsystem
+- Cloud infrastructure intentionally kept minimal (Railway + Vercel) to prioritize application correctness over infrastructure complexity; AWS-based deployment planned as a future learning extension
+
 ## Environment Variables
 
 ### Backend
@@ -266,11 +290,12 @@ A super admin account is automatically created on first run:
 
 Built with resources from:
 - **Spring Boot** - Framework foundation
-- **Laur Spilca** - [YouTube Channel](https://www.youtube.com/@laurspilca) - Security architecture guidance
+- **Laur Spilca** - [YouTube](https://www.youtube.com/@laurspilca) - Security architecture guidance
 
 ## License
 
-This project is available for educational and commercial use.  
+This project is licensed under the MIT License.  
+See the [LICENSE](LICENSE) file for details. 
 
 ## Author
 
