@@ -2,7 +2,7 @@
 
 A secure banking platform built with Spring Boot and Next.js, implementing industry-standard authentication, authorization, and transaction management.
 
-> **🚀 Live Demo**: [Vaulta](https://vaulta-five.vercel.app)
+> **🚀 Live Demo**: Currently undergoing a migration to AWS. ( ETA : not known )
 
 ## Architecture
 
